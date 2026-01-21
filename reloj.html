@@ -4,44 +4,71 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reloj Digital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       padding: 0;
       background: #000;
-      color: #fff;
-      font-family: 'Courier New', monospace;
+      color: #0ff;
+      font-family: 'Orbitron', monospace;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       overflow: hidden;
-    }
-    .clock {
-      font-size: 8vw;
       text-align: center;
-      letter-spacing: 0.2em;
-      text-shadow: 0 0 10px #fff, 0 0 20px #fff;
-      line-height: 1.2;
+    }
+    .clock-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .time {
+      font-size: 10vw;
+      letter-spacing: 0.1em;
+      text-shadow:
+        0 0 10px #0ff,
+        0 0 20px #0ff,
+        0 0 30px rgba(0, 255, 255, 0.5);
+      line-height: 1;
+    }
+    .ampm {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 4vw;
+      color: #fff;
+      opacity: 0.8;
+      text-shadow: none;
     }
     @media (min-width: 1920px) {
-      .clock {
-        font-size: 150px;
-      }
+      .time { font-size: 180px; }
+      .ampm { font-size: 60px; }
     }
   </style>
 </head>
 <body>
-  <div class="clock" id="clock">--:--:--</div>
+  <div class="clock-container">
+    <div class="time" id="time">--:--:--</div>
+    <div class="ampm" id="ampm">--</div>
+  </div>
 
   <script>
     function updateClock() {
       const now = new Date();
-      let hours = now.getHours().toString().padStart(2, '0');
-      let minutes = now.getMinutes().toString().padStart(2, '0');
-      let seconds = now.getSeconds().toString().padStart(2, '0');
-      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      
+      // Convertir a formato 12 horas
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12; // 0 -> 12, 13 -> 1, etc.
+      const formattedHours = hours.toString().padStart(2, '0');
+
+      document.getElementById('time').textContent = `${formattedHours}:${minutes}:${seconds}`;
+      document.getElementById('ampm').textContent = ampm;
     }
+
     setInterval(updateClock, 1000);
     updateClock(); // Inicializa inmediatamente
   </script>
