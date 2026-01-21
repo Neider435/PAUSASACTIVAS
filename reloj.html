@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reloj Digital</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .clock {
+      font-size: 8vw;
+      text-align: center;
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+      line-height: 1.2;
+    }
+    @media (min-width: 1920px) {
+      .clock {
+        font-size: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="clock" id="clock">--:--:--</div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours().toString().padStart(2, '0');
+      let minutes = now.getMinutes().toString().padStart(2, '0');
+      let seconds = now.getSeconds().toString().padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock(); // Inicializa inmediatamente
+  </script>
+</body>
+</html>
