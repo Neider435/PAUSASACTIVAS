@@ -20,7 +20,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube.com/iframe_api"; // ← ESPACIOS ELIMINADOS
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -104,7 +104,7 @@ async function playYoutubeVideo(videoId, duracion) {
     try {
       await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
-        host: 'https://www.youtube-nocookie.com',
+        host: 'https://www.youtube-nocookie.com', // ← ESPACIOS ELIMINADOS
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -147,7 +147,7 @@ async function playYoutubeVideo(videoId, duracion) {
   }, duracion);
 }
 
-// ✅ FUNCIÓN REEMPLAZADA: TODO EN FRONTEND
+// ✅ FUNCIÓN REEMPLAZADA: TODO EN FRONTEND (SIN PYTHON)
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
     console.log("Esperando interacción de inicio...");
@@ -168,7 +168,7 @@ async function checkEstado() {
     const cumpleanos = await cumpleanosRes.json();
 
     const ahora = new Date();
-    const dia_semana = ahora.getDay(); // 0 = domingo, 1 = lunes, ..., 6 = sábado
+    const dia_semana = ahora.getDay(); // 0 = domingo, ..., 4 = jueves
     const ahora_time = ahora.toTimeString().split(' ')[0];
     const [h, m, s] = ahora_time.split(':').map(Number);
     const ahora_segundos = h * 3600 + m * 60 + s;
