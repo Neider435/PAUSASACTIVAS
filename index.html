@@ -102,31 +102,26 @@
             object-position: center;
         }
         
-        /* --- ESTILOS PARA EL TEXTO DEL NOMBRE DE CUMPLEAÑOS (GRANDE Y RESALTADO) --- */
+        /* --- ESTILOS PARA EL TEXTO DEL NOMBRE DE CUMPLEAÑOS (AJUSTADO) --- */
         #birthday-text {
-    position: absolute; 
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) translateY(20px);
-
-    font-size: 6.5em;
-    font-weight: 900;
-    font-family: 'Lato', sans-serif;
-    text-align: center;
-    z-index: 10001;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 20px;
-    display: none;
-
-    /* --- DEGRADADO DENTRO DE LAS LETRAS --- */
-    background: linear-gradient(45deg, #FFD700, #FFA500, #FFC300);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-
-    /* --- SOMBRA MUY SUAVE SOLO PARA CONTRASTE --- */
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
-    }
+            position: absolute; 
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateY(20px);
+            font-size: 3.5em; /* ← Reducido de 6.5em a 3.5em */
+            font-weight: 900;
+            font-family: 'Lato', sans-serif;
+            text-align: center;
+            z-index: 10001;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 10px; /* ← Reducido de 20px a 10px */
+            display: none;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FFC300);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+        }
     </style>
 </head>
 <body>
@@ -148,6 +143,4 @@
 
     <script src="/static/js/base.js"></script>
 </body>
-
 </html>
-
