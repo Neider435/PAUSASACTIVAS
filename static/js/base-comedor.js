@@ -93,7 +93,7 @@ function showBirthdayMessage(nombre, duracion) {
 
 async function playYoutubeVideo(videoId) {
   const muted = !userInteracted;
-  console.log(`Reproduciendo video corporativo: ${videoId}`);
+  console.log(`Reproduciendo video corporativo: ${videoId}. Muted: ${muted}`);
   
   showOverlay(`corporativo_${videoId}`, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
@@ -132,54 +132,55 @@ async function playYoutubeVideo(videoId) {
             }
           },
           'onError': (event) => {
-            console.error("Error en YouTube:", event.data);
+            console.error("Error en YouTube Player:", event.data);
             clearAll();
           }
         }
       });
     } catch (error) {
-      console.error("Error al crear reproductor:", error);
+      console.error("Error al crear reproductor YouTube:", error);
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
   }, null);
 }
 
-// ✅ LÓGICA PARA EL COMEDOR: solo cumpleaños + videos corporativos
+// ✅ LÓGICA PRINCIPAL PARA EL COMEDOR
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
-    console.log("Esperando interacción...");
+    console.log("Esperando interacción de inicio...");
     return;
   }
 
   try {
-    const [horariosRes, cumpleanosRes] = await Promise.all([
+    const [timeRes, cumpleanosRes] = await Promise.all([
       fetch('/time.json'),
       fetch('/cumpleanos.json')
     ]);
 
-    if (!horariosRes.ok || !cumpleanosRes.ok) {
-      throw new Error("No se cargaron los archivos JSON");
+    if (!timeRes.ok || !cumpleanosRes.ok) {
+      throw new Error("No se pudieron cargar time.json o cumpleanos.json");
     }
 
-    const horarios_semanales = await horariosRes.json();
+    const timeData = await timeRes.json();
     const cumpleanos = await cumpleanosRes.json();
 
     const ahora = new Date();
-    const dia_semana = ahora.getDay();
+    const dia_semana = ahora.getDay(); // 0 = dom, 6 = sáb
     const ahora_time = ahora.toTimeString().split(' ')[0];
     const [h, m, s] = ahora_time.split(':').map(Number);
     const ahora_segundos = h * 3600 + m * 60 + s;
 
     const hoy_str = ("0" + (ahora.getMonth() + 1)).slice(-2) + "-" + ("0" + ahora.getDate()).slice(-2);
     const cumpleaneros_hoy = cumpleanos.filter(p => p.fecha === hoy_str).map(p => p.nombre);
-    const horarios_hoy = horarios_semanales[dia_semana] || {};
+    const horarios_hoy = timeData[dia_semana] || {};
 
-    // --- 1. PRIORIDAD: Videos corporativos ---
-    if (horarios_hoy.videos_corporativos) {
+    // --- 1. VIDEOS CORPORATIVOS (prioridad máxima) ---
+    if (horarios_hoy.videos_corporativos && Array.isArray(horarios_hoy.videos_corporativos)) {
       for (const evento of horarios_hoy.videos_corporativos) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
         const inicio_segundos = hi * 3600 + mi * 60 + si;
+        // Ventana de activación: primeros 5 segundos del minuto programado
         if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
           playYoutubeVideo(evento.archivo);
           return;
@@ -187,7 +188,7 @@ async function checkEstado() {
       }
     }
 
-    // --- 2. Cumpleaños (solo si no hay video corporativo) ---
+    // --- 2. CUMPLEAÑOS (solo si no hay video activo) ---
     if (horarios_hoy.cumpleanos && cumpleaneros_hoy.length > 0) {
       for (const evento of horarios_hoy.cumpleanos) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
@@ -208,7 +209,7 @@ async function checkEstado() {
       }
     }
 
-    // Nada activo
+    // Nada activo → limpiar
     const overlay = document.getElementById("overlay");
     if (overlay.style.display !== "none") {
       clearAll();
@@ -220,13 +221,15 @@ async function checkEstado() {
     clearAll();
     const overlay = document.getElementById("overlay");
     overlay.style.display = "flex";
-    document.getElementById("dynamic-content").innerHTML = '<div style="color:red;font-size:2em;text-align:center;">⚠️ Error</div>';
-    setTimeout(() => overlay.style.display = "none", 5000);
+    document.getElementById("dynamic-content").innerHTML = '<div style="color:red;font-size:2em;text-align:center;">⚠️ Error al cargar datos</div>';
+    setTimeout(() => {
+      overlay.style.display = "none";
+    }, 5000);
   }
 }
 
 function initializeApplication() {
-  console.log("Comedor: página cargada.");
+  console.log("Página del comedor cargada.");
   if (!userInteracted) {
     document.getElementById('init-overlay').style.display = 'flex';
     document.getElementById('main-iframe').style.display = 'none';
@@ -240,7 +243,7 @@ function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
   document.getElementById('main-iframe').style.display = 'block';
-  console.log("Sonido habilitado en comedor.");
+  console.log("Interacción registrada. Sonido habilitado.");
   checkEstado();
   checkingInterval = setInterval(checkEstado, 15000);
 }
