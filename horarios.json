@@ -2,7 +2,7 @@
     "0": {
         "cumpleanos": [
             {
-                "hora_inicio": "06:00:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -98,7 +98,7 @@
     "1": {
         "cumpleanos": [
             {
-                "hora_inicio": "09:00:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -193,7 +193,7 @@
     },"2": {
         "cumpleanos": [
             {
-                "hora_inicio": "09:00:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -289,7 +289,7 @@
     "3": {
         "cumpleanos": [
             {
-                "hora_inicio": "09:02:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -384,7 +384,7 @@
     },"4": {
         "cumpleanos": [
             {
-                "hora_inicio": "09:00:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -480,7 +480,7 @@
     "5": {
         "cumpleanos": [
             {
-                "hora_inicio": "09:00:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -575,7 +575,7 @@
     },"6": {
         "cumpleanos": [
             {
-                "hora_inicio": "09:00:00",
+                "hora_inicio": "09:10:00",
                 "duracion_por_persona": 60
             },
             {
@@ -669,6 +669,7 @@
         }
     }
 }
+
 
 
 
