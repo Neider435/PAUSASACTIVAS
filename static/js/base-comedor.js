@@ -154,7 +154,7 @@ async function checkEstado() {
 
   try {
     const [horariosRes, cumpleanosRes] = await Promise.all([
-      fetch('/horarios.json'),
+      fetch('/time.json'),
       fetch('/cumpleanos.json')
     ]);
 
