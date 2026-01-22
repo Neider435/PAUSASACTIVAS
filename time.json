@@ -1,0 +1,226 @@
+{
+  "0": {
+    "cumpleanos": [
+      { "hora_inicio": "06:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  },
+  "1": {
+    "cumpleanos": [
+      { "hora_inicio": "09:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  },
+  "2": {
+    "cumpleanos": [
+      { "hora_inicio": "06:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  },
+  "3": {
+    "cumpleanos": [
+      { "hora_inicio": "06:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  },
+  "4": {
+    "cumpleanos": [
+      { "hora_inicio": "06:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  },
+  "5": {
+    "cumpleanos": [
+      { "hora_inicio": "06:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  },
+  "6": {
+    "cumpleanos": [
+      { "hora_inicio": "06:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "12:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "17:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "20:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "01:00:00", "duracion_por_persona": 60 },
+      { "hora_inicio": "04:00:00", "duracion_por_persona": 60 }
+    ],
+    "videos_corporativos": [
+      { "hora_inicio": "08:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "08:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "08:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "08:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "08:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "08:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "16:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "16:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "16:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "16:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "16:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "16:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 },
+
+      { "hora_inicio": "01:32:00", "archivo": "PnnsekqIjwk", "duracion": 126 },
+      { "hora_inicio": "01:36:00", "archivo": "Avqdgt9AcoM", "duracion": 312 },
+      { "hora_inicio": "01:43:00", "archivo": "2LCTf9EYRJw", "duracion": 55 },
+      { "hora_inicio": "01:46:00", "archivo": "IAXFT6HqzdQ", "duracion": 161 },
+      { "hora_inicio": "01:50:00", "archivo": "BXLNcsME7lI", "duracion": 71 },
+      { "hora_inicio": "01:53:00", "archivo": "ruOqHWxMBJI", "duracion": 171 }
+    ]
+  }
+}
