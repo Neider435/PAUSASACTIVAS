@@ -289,7 +289,7 @@
     "3": {
         "cumpleanos": [
             {
-                "hora_inicio": "6:00:00",
+                "hora_inicio": "16:32:00",
                 "duracion_por_persona": 60
             },
             {
@@ -315,7 +315,7 @@
         ],
         "anuncios_video": [
             {
-                "hora_inicio": "07:30:00",
+                "hora_inicio": "16:35:00",
                 "archivo": "dGjbt4grjLU",
                 "duracion": 60
             },
@@ -348,7 +348,7 @@
         "pausas_activas": {
             "pausa_1": [
                 {
-                    "hora_inicio": "08:00:00",
+                    "hora_inicio": "16:40:00",
                     "archivo": "WfdH9x3C0lg",
                     "duracion": 600
                 },
@@ -669,3 +669,4 @@
         }
     }
 }
+
