@@ -384,7 +384,7 @@
     },"4": {
         "cumpleanos": [
             {
-                "hora_inicio": "11:25:00",
+                "hora_inicio": "14:35:00",
                 "duracion_por_persona": 60
             },
             {
@@ -410,7 +410,7 @@
         ],
         "anuncios_video": [
             {
-                "hora_inicio": "07:30:00",
+                "hora_inicio": "14:37:00",
                 "archivo": "dGjbt4grjLU",
                 "duracion": 60
             },
@@ -443,7 +443,7 @@
         "pausas_activas": {
             "pausa_1": [
                 {
-                    "hora_inicio": "8:00:00",
+                    "hora_inicio": "14:40:00",
                     "archivo": "WfdH9x3C0lg",
                     "duracion": 600
                 },
@@ -669,4 +669,5 @@
         }
     }
 }
+
 
