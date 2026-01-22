@@ -15,16 +15,17 @@
       width: 100%;
       font-family: 'Lato', sans-serif;
       overflow: hidden;
-      background-color: #000;
+      background-color: #ffffff; /* Fondo blanco */
     }
-    #main-background {
+    #main-logo {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 300px; /* Tamaño máximo para evitar pixelación */
+      max-height: 200px;
+      width: auto;
+      height: auto;
       z-index: 1;
     }
     /* --- Overlay de Inicio --- */
@@ -34,13 +35,13 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.95);
+      background: rgba(255,255,255,0.95); /* Fondo blanco semitransparente */
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 10000;
       flex-direction: column;
-      color: white;
+      color: #333;
       font-size: 2em;
       text-align: center;
     }
@@ -118,16 +119,16 @@
 </head>
 <body>
 
-  <!-- Fondo principal: imagen inlotrans.png -->
-  <img id="main-background" src="/static/avisos/inlotrans.png" alt="Inlotrans">
+  <!-- Logo pequeño centrado -->
+  <img id="main-logo" src="/static/avisos/inlotrans.png" alt="Inlotrans">
 
-  <!-- Overlay de inicio (para activar sonido) -->
+  <!-- Overlay de inicio -->
   <div id="init-overlay">
     <p>Haga clic para iniciar la reproducción con sonido.</p>
     <button id="start-button" onclick="handleStartSound()">Iniciar con Sonido</button>
   </div>
 
-  <!-- Overlay dinámico (videos o cumpleaños) -->
+  <!-- Overlay dinámico -->
   <div id="overlay">
     <div id="overlay-content">
       <div id="dynamic-content"></div>
@@ -136,7 +137,6 @@
     </div>
   </div>
 
-  <!-- JS específico para comedor -->
   <script src="/static/js/base-comedor.js"></script>
 </body>
 </html>
