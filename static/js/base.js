@@ -7,7 +7,6 @@ let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
 let userInteracted = false;
 
-// Esta función es llamada automáticamente por la API de YouTube
 function onYouTubeIframeAPIReady() {
   console.log("API de YouTube lista.");
   isYoutubeApiLoaded = true;
@@ -71,7 +70,7 @@ function showOverlay(contentId, callback, duracion) {
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
-  // Solo aplica setTimeout si se pasa una duración (útil para cumpleaños)
+  // Solo aplica setTimeout si se pasa una duración válida (útil para cumpleaños)
   if (duracion !== null && duracion !== undefined) {
     currentOverlayTimeout = setTimeout(() => {
       console.log(`Duración de ${contentId} terminada. Cerrando overlay.`);
@@ -81,7 +80,7 @@ function showOverlay(contentId, callback, duracion) {
 }
 
 function showBirthdayMessage(nombre, duracion) {
-  showOverlay(`cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`, () => {
+  showOverlay(`cumpleanos_${nombre}`, () => {
     const dynamicContent = document.getElementById("dynamic-content");
     const birthdayText = document.getElementById("birthday-text");
 
@@ -90,14 +89,14 @@ function showBirthdayMessage(nombre, duracion) {
 
     birthdayText.innerHTML = `${nombre}`;
     birthdayText.style.display = 'block';
-  }, duracion); // ← SÍ usa duración
+  }, duracion);
 }
 
-async function playYoutubeVideo(videoId, duracion) {
+async function playYoutubeVideo(videoId) {
   const muted = !userInteracted;
   console.log(`Reproduciendo video YouTube: ${videoId}. Muted: ${muted}`);
   
-  // Pasa `null` como duración → NO se usará setTimeout
+  // NO se pasa duración → no hay setTimeout
   showOverlay(`youtube_${videoId}`, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
@@ -145,10 +144,10 @@ async function playYoutubeVideo(videoId, duracion) {
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, null); // ← ¡IMPORTANTE: null para desactivar setTimeout!
+  }, null); // ← null: desactiva cierre automático
 }
 
-// ✅ LÓGICA FRONTEND: carga horarios.json y cumpleanos.json directamente
+// ✅ LÓGICA FRONTEND CON PRIORIDAD A VIDEOS
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
     console.log("Esperando interacción de inicio...");
@@ -182,7 +181,33 @@ async function checkEstado() {
 
     const horarios_hoy = horarios_semanales[dia_semana] || {};
 
-    // 1. Cumpleaños
+    // --- 1. PRIORIDAD MÁXIMA: Anuncios de video ---
+    if (horarios_hoy.anuncios_video) {
+      for (const evento of horarios_hoy.anuncios_video) {
+        const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
+        const inicio_segundos = hi * 3600 + mi * 60 + si;
+        if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
+          playYoutubeVideo(evento.archivo);
+          return;
+        }
+      }
+    }
+
+    // --- 2. PRIORIDAD ALTA: Pausas activas ---
+    if (horarios_hoy.pausas_activas) {
+      for (const lista_pausa of Object.values(horarios_hoy.pausas_activas)) {
+        for (const evento of lista_pausa) {
+          const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
+          const inicio_segundos = hi * 3600 + mi * 60 + si;
+          if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
+            playYoutubeVideo(evento.archivo);
+            return;
+          }
+        }
+      }
+    }
+
+    // --- 3. SOLO SI NO HAY VIDEO: Cumpleaños ---
     if (horarios_hoy.cumpleanos && cumpleaneros_hoy.length > 0) {
       for (const evento of horarios_hoy.cumpleanos) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
@@ -197,32 +222,6 @@ async function checkEstado() {
           if (indice_persona < cumpleaneros_hoy.length) {
             const nombre_actual = cumpleaneros_hoy[indice_persona];
             showBirthdayMessage(nombre_actual, duracion_por_persona);
-            return;
-          }
-        }
-      }
-    }
-
-    // 2. Anuncios de video
-    if (horarios_hoy.anuncios_video) {
-      for (const evento of horarios_hoy.anuncios_video) {
-        const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
-        const inicio_segundos = hi * 3600 + mi * 60 + si;
-        if (ahora_segundos >= inicio_segundos && ahora_segundos <= inicio_segundos + (evento.duracion || 60)) {
-          playYoutubeVideo(evento.archivo, evento.duracion);
-          return;
-        }
-      }
-    }
-
-    // 3. Pausas activas
-    if (horarios_hoy.pausas_activas) {
-      for (const lista_pausa of Object.values(horarios_hoy.pausas_activas)) {
-        for (const evento of lista_pausa) {
-          const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
-          const inicio_segundos = hi * 3600 + mi * 60 + si;
-          if (ahora_segundos >= inicio_segundos && ahora_segundos <= inicio_segundos + (evento.duracion || 60)) {
-            playYoutubeVideo(evento.archivo, evento.duracion);
             return;
           }
         }
