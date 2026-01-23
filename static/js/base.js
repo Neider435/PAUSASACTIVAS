@@ -138,7 +138,7 @@ async function playYoutubeVideo(videoId) {
   }, null);
 }
 
-// ✅ LÓGICA FRONTEND: carga horarios.json directamente
+// ✅ LÓGICA PRINCIPAL: prioridad a videos
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
     console.log("Esperando interacción...");
