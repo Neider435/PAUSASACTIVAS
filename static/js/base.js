@@ -1,5 +1,7 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
+let activeFile = null;
+let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -51,15 +53,25 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
+  activeFile = null;
 }
 
-function showOverlay(contentId, callback) {
+function showOverlay(contentId, callback, duracion) {
+  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
+  activeFile = contentId;
+  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
+  if (duracion !== null && duracion !== undefined) {
+    currentOverlayTimeout = setTimeout(() => {
+      console.log(`Duración de ${contentId} terminada. Cerrando overlay.`);
+      clearAll();
+    }, duracion * 1000);
+  }
 }
 
 function showBirthdayMessage(nombre, duracion) {
@@ -70,11 +82,7 @@ function showBirthdayMessage(nombre, duracion) {
     dynamicContent.style.display = 'block';
     birthdayText.innerHTML = `${nombre}`;
     birthdayText.style.display = 'block';
-  });
-  // Usa setTimeout SOLO para cumpleaños
-  if (duracion) {
-    currentOverlayTimeout = setTimeout(clearAll, duracion * 1000);
-  }
+  }, duracion);
 }
 
 async function playYoutubeVideo(videoId) {
@@ -117,20 +125,20 @@ async function playYoutubeVideo(videoId) {
             }
           },
           'onError': (event) => {
-            console.error("Error YouTube:", event.data);
+            console.error("Error en YouTube Player:", event.data);
             clearAll();
           }
         }
       });
     } catch (error) {
-      console.error("Error al crear reproductor:", error);
+      console.error("Error al crear reproductor YouTube:", error);
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  });
+  }, null);
 }
 
-// ✅ LÓGICA PRINCIPAL
+// ✅ LÓGICA FRONTEND: carga horarios.json directamente
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
     console.log("Esperando interacción...");
@@ -144,14 +152,14 @@ async function checkEstado() {
     ]);
 
     if (!horariosRes.ok || !cumpleanosRes.ok) {
-      throw new Error("No se cargaron los JSON");
+      throw new Error("No se cargaron horarios.json o cumpleanos.json");
     }
 
     const horarios_semanales = await horariosRes.json();
     const cumpleanos = await cumpleanosRes.json();
 
     const ahora = new Date();
-    const dia_semana = ahora.getDay();
+    const dia_semana = ahora.getDay(); // 0 = dom, 6 = sáb
     const ahora_time = ahora.toTimeString().split(' ')[0];
     const [h, m, s] = ahora_time.split(':').map(Number);
     const ahora_segundos = h * 3600 + m * 60 + s;
@@ -160,7 +168,7 @@ async function checkEstado() {
     const cumpleaneros_hoy = cumpleanos.filter(p => p.fecha === hoy_str).map(p => p.nombre);
     const horarios_hoy = horarios_semanales[dia_semana] || {};
 
-    // --- 1. Anuncios de video ---
+    // --- 1. PRIORIDAD MÁXIMA: Anuncios de video ---
     if (horarios_hoy.anuncios_video) {
       for (const evento of horarios_hoy.anuncios_video) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
@@ -172,7 +180,7 @@ async function checkEstado() {
       }
     }
 
-    // --- 2. Pausas activas ---
+    // --- 2. PRIORIDAD ALTA: Pausas activas ---
     if (horarios_hoy.pausas_activas) {
       for (const lista_pausa of Object.values(horarios_hoy.pausas_activas)) {
         for (const evento of lista_pausa) {
@@ -186,7 +194,7 @@ async function checkEstado() {
       }
     }
 
-    // --- 3. Cumpleaños ---
+    // --- 3. SOLO SI NO HAY VIDEO: Cumpleaños ---
     if (horarios_hoy.cumpleanos && cumpleaneros_hoy.length > 0) {
       for (const evento of horarios_hoy.cumpleanos) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
@@ -199,7 +207,8 @@ async function checkEstado() {
           const segundos_transcurridos = ahora_segundos - inicio_segundos;
           const indice_persona = Math.floor(segundos_transcurridos / duracion_por_persona);
           if (indice_persona < cumpleaneros_hoy.length) {
-            showBirthdayMessage(cumpleaneros_hoy[indice_persona], duracion_por_persona);
+            const nombre_actual = cumpleaneros_hoy[indice_persona];
+            showBirthdayMessage(nombre_actual, duracion_por_persona);
             return;
           }
         }
@@ -211,6 +220,7 @@ async function checkEstado() {
     if (overlay.style.display !== "none") {
       clearAll();
     }
+    playedFiles.clear();
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
