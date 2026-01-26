@@ -1,7 +1,5 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
-let activeFile = null;
-let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -19,7 +17,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube.com/iframe_api"; // ← SIN ESPACIOS
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -53,16 +51,12 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
-  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
-  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
-  activeFile = contentId;
-  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
@@ -85,9 +79,10 @@ function showBirthdayMessage(nombre, duracion) {
   }, duracion);
 }
 
-async function playYoutubeVideo(videoId) {
+// ✅ ACEPTA LA DURACIÓN DEL EVENTO
+async function playYoutubeVideo(videoId, duracion) {
   const muted = !userInteracted;
-  console.log(`Reproduciendo video: ${videoId}`);
+  console.log(`Reproduciendo video: ${videoId} por ${duracion} segundos`);
   showOverlay(`youtube_${videoId}`, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
@@ -97,7 +92,7 @@ async function playYoutubeVideo(videoId) {
     try {
       await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
-        host: 'https://www.youtube-nocookie.com',
+        host: 'https://www.youtube-nocookie.com', // ← SIN ESPACIOS
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -118,12 +113,7 @@ async function playYoutubeVideo(videoId) {
               event.target.unMute();
             }
           },
-          'onStateChange': (event) => {
-            if (event.data === YT.PlayerState.ENDED) {
-              console.log("Video terminado.");
-              clearAll();
-            }
-          },
+          // ❌ ELIMINADO: onStateChange → no queremos depender de YouTube
           'onError': (event) => {
             console.error("Error en YouTube Player:", event.data);
             clearAll();
@@ -135,10 +125,10 @@ async function playYoutubeVideo(videoId) {
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, null);
+  }, duracion); // ← PASA LA DURACIÓN AQUÍ
 }
 
-// ✅ LÓGICA PRINCIPAL: prioridad a videos
+// ✅ LÓGICA PRINCIPAL
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
     console.log("Esperando interacción...");
@@ -174,7 +164,7 @@ async function checkEstado() {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
         const inicio_segundos = hi * 3600 + mi * 60 + si;
         if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-          playYoutubeVideo(evento.archivo);
+          playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
           return;
         }
       }
@@ -187,7 +177,7 @@ async function checkEstado() {
           const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
           const inicio_segundos = hi * 3600 + mi * 60 + si;
           if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-            playYoutubeVideo(evento.archivo);
+            playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
             return;
           }
         }
@@ -215,9 +205,11 @@ async function checkEstado() {
       }
     }
 
-    // ✅ NO FORZAR CIERRE SI NO HAY CONTENIDO ACTIVO
-    // El video se cierra solo con YT.PlayerState.ENDED
-    // El cumpleaños se cierra con setTimeout
+    // Nada activo
+    const overlay = document.getElementById("overlay");
+    if (overlay.style.display !== "none") {
+      clearAll();
+    }
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
