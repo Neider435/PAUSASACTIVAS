@@ -93,17 +93,7 @@ async function playYoutubeVideo(videoId, duracion) {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
     dynamicContent.style.display = 'block';
-    document.getElementById('audio-button').style.display = 'block';
-
-    // Botón de audio
-    document.getElementById('audio-button').onclick = () => {
-      if (player && !userInteracted) {
-        userInteracted = true;
-        player.unMute();
-        player.setVolume(100);
-        document.getElementById('audio-button').style.display = 'none';
-      }
-    };
+    document.getElementById('audio-button').style.display = 'none';
 
     try {
       await loadYoutubeApi();
@@ -127,10 +117,15 @@ async function playYoutubeVideo(videoId, duracion) {
             if (!muted) {
               event.target.setVolume(100);
               event.target.unMute();
-              document.getElementById('audio-button').style.display = 'none';
             }
           },
-          // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
+          // Opcional: mantener como respaldo
+          'onStateChange': (event) => {
+            if (event.data === YT.PlayerState.ENDED) {
+              console.log("Video terminado (YouTube).");
+              clearAll();
+            }
+          },
           'onError': (event) => {
             console.error("Error en YouTube Player:", event.data);
             clearAll();
@@ -142,7 +137,7 @@ async function playYoutubeVideo(videoId, duracion) {
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, duracion); // ← ¡PASA LA DURACIÓN AQUÍ!
+  }, duracion); // ← PASA LA DURACIÓN AQUÍ
 }
 
 // ✅ LÓGICA PRINCIPAL
