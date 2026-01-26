@@ -1,159 +1,229 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
-let player = null;
+let player;
+let isYoutubeApiLoaded = false;
+let youtubePlayerPromise = null;
 let userInteracted = false;
 
-// Cargar API de YouTube
+// ✅ PRE-CARGAR LA API AL INICIO
 function loadYoutubeApi() {
-  if (!window.YT) {
+  if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
+    tag.id = 'youtube-api-script';
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
+    youtubePlayerPromise = new Promise((resolve) => {
+      window.onYouTubeIframeAPIReady = () => {
+        isYoutubeApiLoaded = true;
+        resolve();
+      };
+    });
   }
+  return youtubePlayerPromise || Promise.resolve();
 }
 
-// Limpiar todo
+// Llamar inmediatamente
+loadYoutubeApi();
+
 function clearAll() {
   if (currentOverlayTimeout) {
     clearTimeout(currentOverlayTimeout);
     currentOverlayTimeout = null;
   }
   if (player) {
-    try { player.destroy(); } catch (e) {}
+    try { player.destroy(); } catch (e) { console.log("Error al destruir player:", e); }
     player = null;
   }
-  document.getElementById("overlay").style.display = "none";
-  document.getElementById("main-iframe").style.display = "block";
+  const overlay = document.getElementById("overlay");
+  const dynamicContent = document.getElementById("dynamic-content");
+  const birthdayText = document.getElementById("birthday-text");
+  const audioButton = document.getElementById("audio-button");
+  const mainIframe = document.getElementById("main-iframe");
+
+  dynamicContent.innerHTML = '';
+  dynamicContent.style.display = 'none';
+  birthdayText.innerHTML = '';
+  birthdayText.style.display = 'none';
+  audioButton.style.display = 'none';
+  overlay.style.display = "none";
+  mainIframe.style.display = "block";
 }
 
-// Mostrar overlay y reproducir video
-function showVideo(videoId, duration) {
+function showOverlay(contentId, callback, duracion) {
   clearAll();
-  document.getElementById("main-iframe").style.display = "none";
-  document.getElementById("overlay").style.display = "flex";
-  
-  const container = document.getElementById("dynamic-content");
-  container.innerHTML = `<div id="youtube-player"></div>`;
-  
-  // Esperar un momento para asegurar el DOM
-  setTimeout(() => {
-    player = new YT.Player('youtube-player', {
-      height: '100%',
-      width: '100%',
-      videoId: videoId,
-      playerVars: {
-        autoplay: 1,
-        controls: 0,
-        modestbranding: 1,
-        mute: !userInteracted ? 1 : 0,
-        playsinline: 1,
-        rel: 0,
-        iv_load_policy: 3
-      },
-      events: {
-        onReady: (event) => {
-          event.target.playVideo();
-          if (userInteracted) {
-            event.target.unMute();
-          }
+  const overlay = document.getElementById("overlay");
+  const mainIframe = document.getElementById("main-iframe");
+  mainIframe.style.display = "none";
+  overlay.style.display = "flex";
+  callback();
+  // ✅ USAR LA DURACIÓN PARA CERRAR
+  if (duracion) {
+    currentOverlayTimeout = setTimeout(() => {
+      console.log(`Duración de ${contentId} terminada.`);
+      clearAll();
+    }, duracion * 1000);
+  }
+}
+
+function showBirthdayMessage(nombre, duracion) {
+  showOverlay(`cumpleanos_${nombre}`, () => {
+    const dynamicContent = document.getElementById("dynamic-content");
+    const birthdayText = document.getElementById("birthday-text");
+    dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
+    dynamicContent.style.display = 'block';
+    birthdayText.innerHTML = `${nombre}`;
+    birthdayText.style.display = 'block';
+  }, duracion);
+}
+
+// ✅ ACEPTA DURACIÓN Y NO DEPENDE DE ENDED
+async function playYoutubeVideo(videoId, duracion) {
+  console.log(`Reproduciendo video: ${videoId} por ${duracion} segundos`);
+  showOverlay(`youtube_${videoId}`, async () => {
+    const dynamicContent = document.getElementById("dynamic-content");
+    dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
+    dynamicContent.style.display = 'block';
+    document.getElementById('audio-button').style.display = 'none';
+
+    try {
+      await loadYoutubeApi(); // Asegurar que la API esté lista
+      player = new YT.Player('youtube-player', {
+        host: 'https://www.youtube-nocookie.com',
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: {
+          'autoplay': 1,
+          'playsinline': 1,
+          'controls': 0,
+          'modestbranding': 1,
+          'mute': 1, // ← SIEMPRE EN SILENCIO (evita bloqueos)
+          'rel': 0,
+          'iv_load_policy': 3
         },
-        onError: () => {
-          clearAll();
+        events: {
+          'onReady': (event) => {
+            event.target.playVideo();
+          },
+          // ❌ NO USAR onStateChange → confiamos en la duración
+          'onError': (event) => {
+            console.error("Error en YouTube:", event.data);
+            clearAll();
+          }
         }
-      }
-    });
-  }, 100);
-
-  // Cerrar después de la duración especificada
-  currentOverlayTimeout = setTimeout(clearAll, duration * 1000);
+      });
+    } catch (error) {
+      console.error("Error al crear reproductor:", error);
+      dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
+      clearAll();
+    }
+  }, duracion); // ← ¡DURACIÓN AQUÍ!
 }
 
-// Mostrar cumpleaños
-function showBirthday(nombre, duracion) {
-  clearAll();
-  document.getElementById("main-iframe").style.display = "none";
-  document.getElementById("overlay").style.display = "flex";
-  
-  document.getElementById("dynamic-content").innerHTML = 
-    `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
-  document.getElementById("birthday-text").innerHTML = nombre;
-  document.getElementById("birthday-text").style.display = "block";
-  
-  currentOverlayTimeout = setTimeout(clearAll, duracion * 1000);
-}
-
-// Verificar estado
+// ✅ LÓGICA PRINCIPAL
 async function checkEstado() {
-  if (!userInteracted) return;
+  if (document.getElementById('init-overlay').style.display === 'flex') {
+    return;
+  }
 
   try {
     const [horariosRes, cumpleanosRes] = await Promise.all([
       fetch('/horarios.json'),
       fetch('/cumpleanos.json')
     ]);
-    
-    if (!horariosRes.ok || !cumpleanosRes.ok) throw new Error("JSON no cargado");
 
-    const horarios = await horariosRes.json();
+    if (!horariosRes.ok || !cumpleanosRes.ok) {
+      throw new Error("No se cargaron los JSON");
+    }
+
+    const horarios_semanales = await horariosRes.json();
     const cumpleanos = await cumpleanosRes.json();
 
     const ahora = new Date();
-    const dia = ahora.getDay();
-    const horaActual = ahora.getHours() * 3600 + ahora.getMinutes() * 60 + ahora.getSeconds();
-    const hoyFecha = ("0" + (ahora.getMonth() + 1)).slice(-2) + "-" + ("0" + ahora.getDate()).slice(-2);
-    const cumpleHoy = cumpleanos.filter(p => p.fecha === hoyFecha).map(p => p.nombre);
-    const horarioHoy = horarios[dia] || {};
+    const dia_semana = ahora.getDay();
+    const ahora_time = ahora.toTimeString().split(' ')[0];
+    const [h, m, s] = ahora_time.split(':').map(Number);
+    const ahora_segundos = h * 3600 + m * 60 + s;
 
-    // 1. Videos (prioridad máxima)
-    const todosVideos = [
-      ...(horarioHoy.anuncios_video || []),
-      ...(Object.values(horarioHoy.pausas_activas || {}).flat() || [])
-    ];
+    const hoy_str = ("0" + (ahora.getMonth() + 1)).slice(-2) + "-" + ("0" + ahora.getDate()).slice(-2);
+    const cumpleaneros_hoy = cumpleanos.filter(p => p.fecha === hoy_str).map(p => p.nombre);
+    const horarios_hoy = horarios_semanales[dia_semana] || {};
 
-    for (const v of todosVideos) {
-      const [h, m, s] = v.hora_inicio.split(':').map(Number);
-      const inicio = h * 3600 + m * 60 + s;
-      if (horaActual >= inicio && horaActual < inicio + 5) {
-        showVideo(v.archivo, v.duracion || 60);
-        return;
+    // --- Videos: usar duración del evento ---
+    if (horarios_hoy.anuncios_video) {
+      for (const evento of horarios_hoy.anuncios_video) {
+        const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
+        const inicio_segundos = hi * 3600 + mi * 60 + si;
+        if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
+          playYoutubeVideo(evento.archivo, evento.duracion || 60);
+          return;
+        }
       }
     }
 
-    // 2. Cumpleaños
-    if (horarioHoy.cumpleanos && cumpleHoy.length > 0) {
-      for (const c of horarioHoy.cumpleanos) {
-        const [h, m, s] = c.hora_inicio.split(':').map(Number);
-        const inicio = h * 3600 + m * 60 + s;
-        const totalDuracion = cumpleHoy.length * (c.duracion_por_persona || 60);
-        if (horaActual >= inicio && horaActual <= inicio + totalDuracion) {
-          const idx = Math.floor((horaActual - inicio) / (c.duracion_por_persona || 60));
-          if (idx < cumpleHoy.length) {
-            showBirthday(cumpleHoy[idx], c.duracion_por_persona || 60);
+    if (horarios_hoy.pausas_activas) {
+      for (const lista_pausa of Object.values(horarios_hoy.pausas_activas)) {
+        for (const evento of lista_pausa) {
+          const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
+          const inicio_segundos = hi * 3600 + mi * 60 + si;
+          if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
+            playYoutubeVideo(evento.archivo, evento.duracion || 60);
             return;
           }
         }
       }
     }
 
+    // --- Cumpleaños ---
+    if (horarios_hoy.cumpleanos && cumpleaneros_hoy.length > 0) {
+      for (const evento of horarios_hoy.cumpleanos) {
+        const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
+        const inicio_segundos = hi * 3600 + mi * 60 + si;
+        const duracion_por_persona = evento.duracion_por_persona || 60;
+        const total_duracion = cumpleaneros_hoy.length * duracion_por_persona;
+        const fin_segundos = inicio_segundos + total_duracion;
+
+        if (ahora_segundos >= inicio_segundos && ahora_segundos <= fin_segundos) {
+          const idx = Math.floor((ahora_segundos - inicio_segundos) / duracion_por_persona);
+          if (idx < cumpleaneros_hoy.length) {
+            showBirthdayMessage(cumpleaneros_hoy[idx], duracion_por_persona);
+            return;
+          }
+        }
+      }
+    }
+
+    const overlay = document.getElementById("overlay");
+    if (overlay.style.display !== "none") {
+      clearAll();
+    }
+
   } catch (error) {
     console.error("Error:", error);
     clearAll();
+    const overlay = document.getElementById("overlay");
+    overlay.style.display = "flex";
+    document.getElementById("dynamic-content").innerHTML = '<div style="color:red;font-size:2em;text-align:center;">⚠️ Error</div>';
+    setTimeout(() => overlay.style.display = "none", 5000);
   }
 }
 
-// Iniciar
-function start() {
+function initializeApplication() {
+  if (!userInteracted) {
+    document.getElementById('init-overlay').style.display = 'flex';
+    document.getElementById('main-iframe').style.display = 'none';
+  } else {
+    checkEstado();
+    checkingInterval = setInterval(checkEstado, 10000); // ← Chequear cada 10s
+  }
+}
+
+function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
-  loadYoutubeApi();
+  document.getElementById('main-iframe').style.display = 'block';
   checkEstado();
-  checkingInterval = setInterval(checkEstado, 1000); // ← Chequeo cada 1 segundo
+  checkingInterval = setInterval(checkEstado, 10000);
 }
 
-// Cargar
-window.addEventListener('load', () => {
-  if (!window.YT) {
-    window.onYouTubeIframeAPIReady = () => {};
-  }
-  document.getElementById('start-button').onclick = start;
-});
+window.addEventListener('load', initializeApplication);
