@@ -193,8 +193,8 @@ async function checkEstado() {
     
     try {
         const [horariosRes, cumpleanosRes] = await Promise.all([
-            fetch('horarios.json'),  // ✅ Ruta corregida
-            fetch('cumpleanos.json')  // ✅ Ruta corregida
+            fetch('horarios.json'),
+            fetch('cumpleanos.json')
         ]);
         
         if (!horariosRes.ok || !cumpleanosRes.ok) {
@@ -227,7 +227,7 @@ async function checkEstado() {
                 
                 console.log(`🎬 Anuncio: ${evento.hora_inicio} (${inicio_segundos}s) - ID: ${evento.archivo}`);
                 
-                // ✅ VENTANA DE 60 SEGUNDOS (mejor precisión)
+                // ✅ VENTANA DE 60 SEGUNDOS
                 if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 60) {
                     const key = `anuncio_${evento.archivo}_${inicio_segundos}`;
                     if (!playedFiles.has(key)) {
