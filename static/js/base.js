@@ -1,5 +1,7 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
+let activeFile = null;
+let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -17,7 +19,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api"; // ← SIN ESPACIOS
+    tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -51,12 +53,16 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
+  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
+  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
+  activeFile = contentId;
+  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
@@ -87,21 +93,12 @@ async function playYoutubeVideo(videoId, duracion) {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
     dynamicContent.style.display = 'block';
-    document.getElementById('audio-button').style.display = 'block';
-
-    document.getElementById('audio-button').onclick = () => {
-      if (player && !userInteracted) {
-        userInteracted = true;
-        player.unMute();
-        player.setVolume(100);
-        document.getElementById('audio-button').style.display = 'none';
-      }
-    };
+    document.getElementById('audio-button').style.display = 'none';
 
     try {
       await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
-        host: 'https://www.youtube-nocookie.com', // ← SIN ESPACIOS
+        host: 'https://www.youtube-nocookie.com',
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -120,10 +117,15 @@ async function playYoutubeVideo(videoId, duracion) {
             if (!muted) {
               event.target.setVolume(100);
               event.target.unMute();
-              document.getElementById('audio-button').style.display = 'none';
             }
           },
-          // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
+          // Opcional: mantener como respaldo
+          'onStateChange': (event) => {
+            if (event.data === YT.PlayerState.ENDED) {
+              console.log("Video terminado (YouTube).");
+              clearAll();
+            }
+          },
           'onError': (event) => {
             console.error("Error en YouTube Player:", event.data);
             clearAll();
@@ -135,7 +137,7 @@ async function playYoutubeVideo(videoId, duracion) {
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, duracion); // ← ¡PASA LA DURACIÓN AQUÍ!
+  }, duracion); // ← PASA LA DURACIÓN AQUÍ
 }
 
 // ✅ LÓGICA PRINCIPAL
@@ -220,6 +222,7 @@ async function checkEstado() {
     if (overlay.style.display !== "none") {
       clearAll();
     }
+    playedFiles.clear();
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
