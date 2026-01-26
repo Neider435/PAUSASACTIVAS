@@ -85,14 +85,25 @@ function showBirthdayMessage(nombre, duracion) {
   }, duracion);
 }
 
-// ✅ RECIBE LA DURACIÓN DEL JSON Y LA USA PARA CERRAR EL OVERLAY
+// ✅ ACEPTA LA DURACIÓN DEL EVENTO
 async function playYoutubeVideo(videoId, duracion) {
+  const muted = !userInteracted;
   console.log(`Reproduciendo video: ${videoId} por ${duracion} segundos`);
   showOverlay(`youtube_${videoId}`, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
     dynamicContent.style.display = 'block';
-    document.getElementById('audio-button').style.display = 'none';
+    document.getElementById('audio-button').style.display = 'block';
+
+    // Botón de audio
+    document.getElementById('audio-button').onclick = () => {
+      if (player && !userInteracted) {
+        userInteracted = true;
+        player.unMute();
+        player.setVolume(100);
+        document.getElementById('audio-button').style.display = 'none';
+      }
+    };
 
     try {
       await loadYoutubeApi();
@@ -106,13 +117,18 @@ async function playYoutubeVideo(videoId, duracion) {
           'playsinline': 1,
           'controls': 0,
           'modestbranding': 1,
-          'mute': 1, // ← SIEMPRE EN SILENCIO para evitar bloqueos
+          'mute': muted ? 1 : 0,
           'rel': 0,
           'iv_load_policy': 3
         },
         events: {
           'onReady': (event) => {
             event.target.playVideo();
+            if (!muted) {
+              event.target.setVolume(100);
+              event.target.unMute();
+              document.getElementById('audio-button').style.display = 'none';
+            }
           },
           // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
           'onError': (event) => {
@@ -126,7 +142,7 @@ async function playYoutubeVideo(videoId, duracion) {
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, duracion); // ← ¡LA DURACIÓN VIENE DE horarios.json!
+  }, duracion); // ← ¡PASA LA DURACIÓN AQUÍ!
 }
 
 // ✅ LÓGICA PRINCIPAL
