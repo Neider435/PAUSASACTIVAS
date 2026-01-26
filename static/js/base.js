@@ -1,7 +1,5 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
-let activeFile = null;
-let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -53,16 +51,12 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
-  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
-  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
-  activeFile = contentId;
-  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
@@ -220,7 +214,6 @@ async function checkEstado() {
     if (overlay.style.display !== "none") {
       clearAll();
     }
-    playedFiles.clear();
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
