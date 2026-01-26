@@ -85,10 +85,10 @@ function showBirthdayMessage(nombre, duracion) {
   }, duracion);
 }
 
-// ✅ ACEPTA LA DURACIÓN DEL EVENTO
-async function playYoutubeVideo(videoId, duracion) {
+// ✅ VIDEO COMPLETO: usa solo el evento ENDED de YouTube
+async function playYoutubeVideo(videoId) {
   const muted = !userInteracted;
-  console.log(`Reproduciendo video: ${videoId} por ${duracion} segundos`);
+  console.log(`Reproduciendo video: ${videoId}`);
   showOverlay(`youtube_${videoId}`, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
@@ -129,7 +129,12 @@ async function playYoutubeVideo(videoId, duracion) {
               document.getElementById('audio-button').style.display = 'none';
             }
           },
-          // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
+          'onStateChange': (event) => {
+            if (event.data === YT.PlayerState.ENDED) {
+              console.log("Video terminado.");
+              clearAll();
+            }
+          },
           'onError': (event) => {
             console.error("Error en YouTube Player:", event.data);
             clearAll();
@@ -141,7 +146,7 @@ async function playYoutubeVideo(videoId, duracion) {
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, duracion); // ← PASA LA DURACIÓN AQUÍ
+  }, null); // ← null = no usar setTimeout, depender solo de YouTube
 }
 
 // ✅ LÓGICA PRINCIPAL
@@ -180,7 +185,7 @@ async function checkEstado() {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
         const inicio_segundos = hi * 3600 + mi * 60 + si;
         if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-          playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
+          playYoutubeVideo(evento.archivo); // ← SIN pasar duracion
           return;
         }
       }
@@ -193,7 +198,7 @@ async function checkEstado() {
           const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
           const inicio_segundos = hi * 3600 + mi * 60 + si;
           if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-            playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
+            playYoutubeVideo(evento.archivo); // ← SIN pasar duracion
             return;
           }
         }
