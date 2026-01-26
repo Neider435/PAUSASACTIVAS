@@ -1,5 +1,7 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
+let activeFile = null;
+let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -17,7 +19,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api"; // ← SIN ESPACIOS
+    tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -51,12 +53,16 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
+  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
+  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
+  activeFile = contentId;
+  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
@@ -92,7 +98,7 @@ async function playYoutubeVideo(videoId, duracion) {
     try {
       await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
-        host: 'https://www.youtube-nocookie.com', // ← SIN ESPACIOS
+        host: 'https://www.youtube-nocookie.com',
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -113,7 +119,13 @@ async function playYoutubeVideo(videoId, duracion) {
               event.target.unMute();
             }
           },
-          // ❌ ELIMINADO: onStateChange → no queremos depender de YouTube
+          // Opcional: mantener como respaldo
+          'onStateChange': (event) => {
+            if (event.data === YT.PlayerState.ENDED) {
+              console.log("Video terminado (YouTube).");
+              clearAll();
+            }
+          },
           'onError': (event) => {
             console.error("Error en YouTube Player:", event.data);
             clearAll();
@@ -210,6 +222,7 @@ async function checkEstado() {
     if (overlay.style.display !== "none") {
       clearAll();
     }
+    playedFiles.clear();
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
