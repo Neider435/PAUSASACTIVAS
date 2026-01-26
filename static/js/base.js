@@ -1,7 +1,5 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
-let activeFile = null;
-let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -19,7 +17,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube.com/iframe_api"; // ← SIN ESPACIOS
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -53,16 +51,12 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
-  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
-  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
-  activeFile = contentId;
-  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
@@ -85,21 +79,29 @@ function showBirthdayMessage(nombre, duracion) {
   }, duracion);
 }
 
-// ✅ SIN PARÁMETRO DE DURACIÓN - se cierra cuando termina el video
-async function playYoutubeVideo(videoId) {
+// ✅ ACEPTA LA DURACIÓN DEL EVENTO
+async function playYoutubeVideo(videoId, duracion) {
   const muted = !userInteracted;
-  console.log(`🎬 Reproduciendo video: ${videoId}`);
-  
+  console.log(`Reproduciendo video: ${videoId} por ${duracion} segundos`);
   showOverlay(`youtube_${videoId}`, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
     dynamicContent.style.display = 'block';
-    document.getElementById('audio-button').style.display = 'none';
+    document.getElementById('audio-button').style.display = 'block';
+
+    document.getElementById('audio-button').onclick = () => {
+      if (player && !userInteracted) {
+        userInteracted = true;
+        player.unMute();
+        player.setVolume(100);
+        document.getElementById('audio-button').style.display = 'none';
+      }
+    };
 
     try {
       await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
-        host: 'https://www.youtube-nocookie.com',
+        host: 'https://www.youtube-nocookie.com', // ← SIN ESPACIOS
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -114,34 +116,26 @@ async function playYoutubeVideo(videoId) {
         },
         events: {
           'onReady': (event) => {
-            console.log("▶️ Video listo, reproduciendo...");
             event.target.playVideo();
             if (!muted) {
               event.target.setVolume(100);
               event.target.unMute();
+              document.getElementById('audio-button').style.display = 'none';
             }
           },
-          'onStateChange': (event) => {
-            if (event.data === YT.PlayerState.ENDED) {
-              console.log("⏹️ Video terminado. Cerrando overlay.");
-              clearAll();
-            }
-            if (event.data === YT.PlayerState.PLAYING) {
-              console.log("▶️ Video en reproducción");
-            }
-          },
+          // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
           'onError': (event) => {
-            console.error("❌ Error en YouTube Player:", event.data);
+            console.error("Error en YouTube Player:", event.data);
             clearAll();
           }
         }
       });
     } catch (error) {
-      console.error("❌ Error al crear reproductor YouTube:", error);
+      console.error("Error al crear reproductor YouTube:", error);
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, null); // ✅ null = sin timeout
+  }, duracion); // ← ¡PASA LA DURACIÓN AQUÍ!
 }
 
 // ✅ LÓGICA PRINCIPAL
@@ -165,7 +159,7 @@ async function checkEstado() {
     const cumpleanos = await cumpleanosRes.json();
 
     const ahora = new Date();
-    const dia_semana = ahora.getDay();
+    const dia_semana = ahora.getDay(); // 0 = dom, 6 = sáb
     const ahora_time = ahora.toTimeString().split(' ')[0];
     const [h, m, s] = ahora_time.split(':').map(Number);
     const ahora_segundos = h * 3600 + m * 60 + s;
@@ -180,7 +174,7 @@ async function checkEstado() {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
         const inicio_segundos = hi * 3600 + mi * 60 + si;
         if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-          playYoutubeVideo(evento.archivo); // ✅ Sin duración
+          playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
           return;
         }
       }
@@ -193,7 +187,7 @@ async function checkEstado() {
           const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
           const inicio_segundos = hi * 3600 + mi * 60 + si;
           if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-            playYoutubeVideo(evento.archivo); // ✅ Sin duración
+            playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
             return;
           }
         }
@@ -226,7 +220,6 @@ async function checkEstado() {
     if (overlay.style.display !== "none") {
       clearAll();
     }
-    playedFiles.clear();
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
