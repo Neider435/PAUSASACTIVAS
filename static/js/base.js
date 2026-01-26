@@ -1,5 +1,7 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
+let activeFile = null;
+let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
@@ -51,12 +53,16 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
+  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
+  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
+  activeFile = contentId;
+  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
@@ -209,11 +215,9 @@ async function checkEstado() {
       }
     }
 
-    // Nada activo
-    const overlay = document.getElementById("overlay");
-    if (overlay.style.display !== "none") {
-      clearAll();
-    }
+    // ✅ NO FORZAR CIERRE SI NO HAY CONTENIDO ACTIVO
+    // El video se cierra solo con YT.PlayerState.ENDED
+    // El cumpleaños se cierra con setTimeout
 
   } catch (error) {
     console.error("Error en checkEstado:", error);
