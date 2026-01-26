@@ -129,13 +129,7 @@ async function playYoutubeVideo(videoId, duracion) {
               document.getElementById('audio-button').style.display = 'none';
             }
           },
-          // Opcional: mantener como respaldo
-          'onStateChange': (event) => {
-            if (event.data === YT.PlayerState.ENDED) {
-              console.log("Video terminado (YouTube).");
-              clearAll();
-            }
-          },
+          // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
           'onError': (event) => {
             console.error("Error en YouTube Player:", event.data);
             clearAll();
