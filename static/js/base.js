@@ -19,7 +19,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube.com/iframe_api"; // ← SIN ESPACIOS
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -93,12 +93,21 @@ async function playYoutubeVideo(videoId, duracion) {
     const dynamicContent = document.getElementById("dynamic-content");
     dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;"></div>`;
     dynamicContent.style.display = 'block';
-    document.getElementById('audio-button').style.display = 'none';
+    document.getElementById('audio-button').style.display = 'block';
+
+    document.getElementById('audio-button').onclick = () => {
+      if (player && !userInteracted) {
+        userInteracted = true;
+        player.unMute();
+        player.setVolume(100);
+        document.getElementById('audio-button').style.display = 'none';
+      }
+    };
 
     try {
       await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
-        host: 'https://www.youtube-nocookie.com',
+        host: 'https://www.youtube-nocookie.com', // ← SIN ESPACIOS
         height: '100%',
         width: '100%',
         videoId: videoId,
@@ -117,6 +126,7 @@ async function playYoutubeVideo(videoId, duracion) {
             if (!muted) {
               event.target.setVolume(100);
               event.target.unMute();
+              document.getElementById('audio-button').style.display = 'none';
             }
           },
           // Opcional: mantener como respaldo
