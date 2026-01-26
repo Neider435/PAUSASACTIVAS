@@ -1,11 +1,20 @@
 let checkingInterval;
 let currentOverlayTimeout = null;
+let activeFile = null;
+let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
 let userInteracted = false;
 
-// ✅ PRE-CARGAR LA API AL INICIO
+function onYouTubeIframeAPIReady() {
+  console.log("API de YouTube lista.");
+  isYoutubeApiLoaded = true;
+  if (youtubePlayerPromise) {
+    youtubePlayerPromise.resolve();
+  }
+}
+
 function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
@@ -21,9 +30,6 @@ function loadYoutubeApi() {
   }
   return youtubePlayerPromise || Promise.resolve();
 }
-
-// Llamar inmediatamente
-loadYoutubeApi();
 
 function clearAll() {
   if (currentOverlayTimeout) {
@@ -47,19 +53,22 @@ function clearAll() {
   audioButton.style.display = 'none';
   overlay.style.display = "none";
   mainIframe.style.display = "block";
+  activeFile = null;
 }
 
 function showOverlay(contentId, callback, duracion) {
+  if (activeFile === contentId) return;
   clearAll();
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
+  activeFile = contentId;
+  playedFiles.add(contentId);
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   callback();
-  // ✅ USAR LA DURACIÓN PARA CERRAR
-  if (duracion) {
+  if (duracion !== null && duracion !== undefined) {
     currentOverlayTimeout = setTimeout(() => {
-      console.log(`Duración de ${contentId} terminada.`);
+      console.log(`Duración de ${contentId} terminada. Cerrando overlay.`);
       clearAll();
     }, duracion * 1000);
   }
@@ -76,7 +85,7 @@ function showBirthdayMessage(nombre, duracion) {
   }, duracion);
 }
 
-// ✅ ACEPTA DURACIÓN Y NO DEPENDE DE ENDED
+// ✅ RECIBE LA DURACIÓN DEL JSON Y LA USA PARA CERRAR EL OVERLAY
 async function playYoutubeVideo(videoId, duracion) {
   console.log(`Reproduciendo video: ${videoId} por ${duracion} segundos`);
   showOverlay(`youtube_${videoId}`, async () => {
@@ -86,7 +95,7 @@ async function playYoutubeVideo(videoId, duracion) {
     document.getElementById('audio-button').style.display = 'none';
 
     try {
-      await loadYoutubeApi(); // Asegurar que la API esté lista
+      await loadYoutubeApi();
       player = new YT.Player('youtube-player', {
         host: 'https://www.youtube-nocookie.com',
         height: '100%',
@@ -97,7 +106,7 @@ async function playYoutubeVideo(videoId, duracion) {
           'playsinline': 1,
           'controls': 0,
           'modestbranding': 1,
-          'mute': 1, // ← SIEMPRE EN SILENCIO (evita bloqueos)
+          'mute': 1, // ← SIEMPRE EN SILENCIO para evitar bloqueos
           'rel': 0,
           'iv_load_policy': 3
         },
@@ -105,24 +114,25 @@ async function playYoutubeVideo(videoId, duracion) {
           'onReady': (event) => {
             event.target.playVideo();
           },
-          // ❌ NO USAR onStateChange → confiamos en la duración
+          // ❌ NO USAMOS onStateChange → el tiempo lo controla horarios.json
           'onError': (event) => {
-            console.error("Error en YouTube:", event.data);
+            console.error("Error en YouTube Player:", event.data);
             clearAll();
           }
         }
       });
     } catch (error) {
-      console.error("Error al crear reproductor:", error);
+      console.error("Error al crear reproductor YouTube:", error);
       dynamicContent.innerHTML = '<div style="color:red;text-align:center;">Error al cargar video</div>';
       clearAll();
     }
-  }, duracion); // ← ¡DURACIÓN AQUÍ!
+  }, duracion); // ← ¡LA DURACIÓN VIENE DE horarios.json!
 }
 
 // ✅ LÓGICA PRINCIPAL
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
+    console.log("Esperando interacción...");
     return;
   }
 
@@ -133,14 +143,14 @@ async function checkEstado() {
     ]);
 
     if (!horariosRes.ok || !cumpleanosRes.ok) {
-      throw new Error("No se cargaron los JSON");
+      throw new Error("No se cargaron horarios.json o cumpleanos.json");
     }
 
     const horarios_semanales = await horariosRes.json();
     const cumpleanos = await cumpleanosRes.json();
 
     const ahora = new Date();
-    const dia_semana = ahora.getDay();
+    const dia_semana = ahora.getDay(); // 0 = dom, 6 = sáb
     const ahora_time = ahora.toTimeString().split(' ')[0];
     const [h, m, s] = ahora_time.split(':').map(Number);
     const ahora_segundos = h * 3600 + m * 60 + s;
@@ -149,32 +159,33 @@ async function checkEstado() {
     const cumpleaneros_hoy = cumpleanos.filter(p => p.fecha === hoy_str).map(p => p.nombre);
     const horarios_hoy = horarios_semanales[dia_semana] || {};
 
-    // --- Videos: usar duración del evento ---
+    // --- 1. PRIORIDAD MÁXIMA: Anuncios de video ---
     if (horarios_hoy.anuncios_video) {
       for (const evento of horarios_hoy.anuncios_video) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
         const inicio_segundos = hi * 3600 + mi * 60 + si;
         if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-          playYoutubeVideo(evento.archivo, evento.duracion || 60);
+          playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
           return;
         }
       }
     }
 
+    // --- 2. PRIORIDAD ALTA: Pausas activas ---
     if (horarios_hoy.pausas_activas) {
       for (const lista_pausa of Object.values(horarios_hoy.pausas_activas)) {
         for (const evento of lista_pausa) {
           const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
           const inicio_segundos = hi * 3600 + mi * 60 + si;
           if (ahora_segundos >= inicio_segundos && ahora_segundos < inicio_segundos + 5) {
-            playYoutubeVideo(evento.archivo, evento.duracion || 60);
+            playYoutubeVideo(evento.archivo, evento.duracion || 60); // ← PASA LA DURACIÓN
             return;
           }
         }
       }
     }
 
-    // --- Cumpleaños ---
+    // --- 3. SOLO SI NO HAY VIDEO: Cumpleaños ---
     if (horarios_hoy.cumpleanos && cumpleaneros_hoy.length > 0) {
       for (const evento of horarios_hoy.cumpleanos) {
         const [hi, mi, si] = evento.hora_inicio.split(':').map(Number);
@@ -184,22 +195,26 @@ async function checkEstado() {
         const fin_segundos = inicio_segundos + total_duracion;
 
         if (ahora_segundos >= inicio_segundos && ahora_segundos <= fin_segundos) {
-          const idx = Math.floor((ahora_segundos - inicio_segundos) / duracion_por_persona);
-          if (idx < cumpleaneros_hoy.length) {
-            showBirthdayMessage(cumpleaneros_hoy[idx], duracion_por_persona);
+          const segundos_transcurridos = ahora_segundos - inicio_segundos;
+          const indice_persona = Math.floor(segundos_transcurridos / duracion_por_persona);
+          if (indice_persona < cumpleaneros_hoy.length) {
+            const nombre_actual = cumpleaneros_hoy[indice_persona];
+            showBirthdayMessage(nombre_actual, duracion_por_persona);
             return;
           }
         }
       }
     }
 
+    // Nada activo
     const overlay = document.getElementById("overlay");
     if (overlay.style.display !== "none") {
       clearAll();
     }
+    playedFiles.clear();
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error en checkEstado:", error);
     clearAll();
     const overlay = document.getElementById("overlay");
     overlay.style.display = "flex";
@@ -214,7 +229,7 @@ function initializeApplication() {
     document.getElementById('main-iframe').style.display = 'none';
   } else {
     checkEstado();
-    checkingInterval = setInterval(checkEstado, 10000); // ← Chequear cada 10s
+    checkingInterval = setInterval(checkEstado, 15000);
   }
 }
 
@@ -222,8 +237,9 @@ function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
   document.getElementById('main-iframe').style.display = 'block';
+  console.log("Sonido habilitado.");
   checkEstado();
-  checkingInterval = setInterval(checkEstado, 10000);
+  checkingInterval = setInterval(checkEstado, 15000);
 }
 
 window.addEventListener('load', initializeApplication);
