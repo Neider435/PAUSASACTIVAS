@@ -98,7 +98,7 @@
     "1": {
         "cumpleanos": [
             {
-                "hora_inicio": "13:02:00",
+                "hora_inicio": "13:07:00",
                 "duracion_por_persona": 60
             },
             {
@@ -669,6 +669,7 @@
         }
     }
 }
+
 
 
 
