@@ -20,7 +20,7 @@ function loadYoutubeApi() {
     if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'youtube-api-script';
-        tag.src = "https://www.youtube.com/iframe_api";
+        tag.src = "https://www.youtube.com/iframe_api  ";
         document.head.appendChild(tag);
         
         youtubePlayerPromise = new Promise((resolve) => {
@@ -68,7 +68,7 @@ function clearAll() {
     activeFile = null;
 }
 
-function showOverlay(contentId, callback, duracion, isYoutubeVideo = false) {
+function showOverlay(contentId, callback, duracion) {
     if (activeFile === contentId) return;
 
     clearAll();
@@ -83,8 +83,7 @@ function showOverlay(contentId, callback, duracion, isYoutubeVideo = false) {
 
     callback();
 
-    // Solo establecer timeout si NO es video de YouTube
-    if (duracion && !isYoutubeVideo) {
+    if (duracion) {
         currentOverlayTimeout = setTimeout(() => {
             console.log(`Duración de ${contentId} terminada. Cerrando overlay.`);
             clearAll();
@@ -95,11 +94,13 @@ function showOverlay(contentId, callback, duracion, isYoutubeVideo = false) {
 function showBirthdayMessage(nombre, duracion) {
     showOverlay(`cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`, () => {
         const dynamicContent = document.getElementById("dynamic-content");
-        const birthdayText = document.getElementById("birthday-text");
+        const birthdayText = document.getElementById("birthday-text"); // Este es el contenedor del texto
 
+        // 1. Inyectar la imagen de fondo en dynamicContent (Usando la corrección de imagen)
         dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
         dynamicContent.style.display = 'block';
 
+        // 2. Colocar solo el nombre dentro del div 'birthday-text' (Usando la corrección de texto)
         birthdayText.innerHTML = `${nombre}`; 
         birthdayText.style.display = 'block';
 
@@ -107,6 +108,7 @@ function showBirthdayMessage(nombre, duracion) {
 }
 
 async function playYoutubeVideo(videoId, duracion) {
+    // Si el usuario ya interactuó, muted es false (con audio). Si no, es true (sin audio).
     const muted = !userInteracted; 
     console.log(`Intentando reproducir video de YouTube con ID: ${videoId}. Muted: ${muted}`);
     
@@ -121,7 +123,7 @@ async function playYoutubeVideo(videoId, duracion) {
             await loadYoutubeApi();
             
             player = new YT.Player('youtube-player', {
-                host: 'https://www.youtube-nocookie.com',
+                host: 'https://www.youtube-nocookie.com  ',
                 height: '100%',
                 width: '100%',
                 videoId: videoId,
@@ -130,7 +132,7 @@ async function playYoutubeVideo(videoId, duracion) {
                     'playsinline': 1,
                     'controls': 0,
                     'modestbranding': 1,
-                    'mute': muted ? 1 : 0,
+                    'mute': muted ? 1 : 0, // Utiliza la bandera muted
                     'rel': 0,
                     'showinfo': 0,
                     'iv_load_policy': 3
@@ -139,9 +141,11 @@ async function playYoutubeVideo(videoId, duracion) {
                     'onReady': (event) => {
                         console.log("Video YouTube listo para reproducir");
                         event.target.playVideo();
+                        
+                        // Si no está muteado, nos aseguramos de que el volumen esté al 100
                         if (!muted) {
-                            event.target.setVolume(100);
-                            event.target.unMute();
+                             event.target.setVolume(100);
+                             event.target.unMute();
                         }
                     },
                     'onStateChange': (event) => {
@@ -163,7 +167,7 @@ async function playYoutubeVideo(videoId, duracion) {
             dynamicContent.innerHTML = '<div style="color:red; text-align:center;">Error al cargar el reproductor de YouTube</div>';
             clearAll();
         }
-    }, duracion, true);
+    }, duracion);
 }
 
 async function checkEstado() {
@@ -184,6 +188,7 @@ async function checkEstado() {
         const overlay = document.getElementById("overlay");
         const isOverlayVisible = overlay.style.display !== "none";
         
+        // ... Lógica para verificar el contenido programado (cumpleaños, anuncios, pausas)
         if (data.activo) {
             let contentId;
             if (data.tipo === "cumpleanos") {
@@ -216,7 +221,6 @@ async function checkEstado() {
     } catch (error) {
         console.error("Error al verificar estado:", error);
         clearAll();
-        
         const mainIframe = document.getElementById("main-iframe");
         mainIframe.style.display = "block";
         
@@ -225,11 +229,9 @@ async function checkEstado() {
         dynamicContent.style.display = 'block';
         const overlay = document.getElementById("overlay");
         overlay.style.display = "flex";
-        
-        // ✅ CORRECCIÓN CLAVE: Después de 5s, no solo oculta el overlay, sino que vuelve a intentar
         setTimeout(() => {
-            overlay.style.display "none";
-            // 👇 Vuelve a llamar a checkEstado() para reintentar inmediatamente
+            overlay.style.display = "none";
+            // ✅ ÚNICA LÍNEA AÑADIDA: reactivar el flujo tras el error
             checkEstado();
         }, 5000);
     }
