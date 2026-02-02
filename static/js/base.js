@@ -20,7 +20,7 @@ function loadYoutubeApi() {
     if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
         const tag = document.createElement('script');
         tag.id = 'youtube-api-script';
-        tag.src = "https://www.youtube.com/iframe_api  ";
+        tag.src = "https://www.youtube.com/iframe_api";
         document.head.appendChild(tag);
         
         youtubePlayerPromise = new Promise((resolve) => {
@@ -123,7 +123,7 @@ async function playYoutubeVideo(videoId, duracion) {
             await loadYoutubeApi();
             
             player = new YT.Player('youtube-player', {
-                host: 'https://www.youtube-nocookie.com  ',
+                host: 'https://www.youtube-nocookie.com',
                 height: '100%',
                 width: '100%',
                 videoId: videoId,
@@ -227,12 +227,9 @@ async function checkEstado() {
         const dynamicContent = document.getElementById("dynamic-content");
         dynamicContent.innerHTML = `<div style="color:red; text-align:center;">Error de conexión. Reintentando...</div>`;
         dynamicContent.style.display = 'block';
-        const overlay = document.getElementById("overlay");
         overlay.style.display = "flex";
         setTimeout(() => {
             overlay.style.display = "none";
-            // ✅ ÚNICA LÍNEA AÑADIDA: reactivar el flujo tras el error
-            checkEstado();
         }, 5000);
     }
 }
