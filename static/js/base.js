@@ -95,13 +95,11 @@ function showOverlay(contentId, callback, duracion, isYoutubeVideo = false) {
 function showBirthdayMessage(nombre, duracion) {
     showOverlay(`cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`, () => {
         const dynamicContent = document.getElementById("dynamic-content");
-        const birthdayText = document.getElementById("birthday-text"); // Este es el contenedor del texto
+        const birthdayText = document.getElementById("birthday-text");
 
-        // 1. Inyectar la imagen de fondo en dynamicContent (Usando la corrección de imagen)
         dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
         dynamicContent.style.display = 'block';
 
-        // 2. Colocar solo el nombre dentro del div 'birthday-text' (Usando la corrección de texto)
         birthdayText.innerHTML = `${nombre}`; 
         birthdayText.style.display = 'block';
 
@@ -109,11 +107,9 @@ function showBirthdayMessage(nombre, duracion) {
 }
 
 async function playYoutubeVideo(videoId, duracion) {
-    // Si el usuario ya interactuó, muted es false (con audio). Si no, es true (sin audio).
     const muted = !userInteracted; 
     console.log(`Intentando reproducir video de YouTube con ID: ${videoId}. Muted: ${muted}`);
     
-    // Para videos de YouTube, no usamos el timeout de duración, confiamos en el evento ENDED
     showOverlay(`youtube_${videoId}`, async () => {
         const dynamicContent = document.getElementById("dynamic-content");
         dynamicContent.innerHTML = `<div id="youtube-player" style="width: 100%; height: 100%;"></div>`;
@@ -134,7 +130,7 @@ async function playYoutubeVideo(videoId, duracion) {
                     'playsinline': 1,
                     'controls': 0,
                     'modestbranding': 1,
-                    'mute': muted ? 1 : 0, // Utiliza la bandera muted
+                    'mute': muted ? 1 : 0,
                     'rel': 0,
                     'showinfo': 0,
                     'iv_load_policy': 3
@@ -143,11 +139,9 @@ async function playYoutubeVideo(videoId, duracion) {
                     'onReady': (event) => {
                         console.log("Video YouTube listo para reproducir");
                         event.target.playVideo();
-                        
-                        // Si no está muteado, nos aseguramos de que el volumen esté al 100
                         if (!muted) {
-                             event.target.setVolume(100);
-                             event.target.unMute();
+                            event.target.setVolume(100);
+                            event.target.unMute();
                         }
                     },
                     'onStateChange': (event) => {
@@ -169,7 +163,7 @@ async function playYoutubeVideo(videoId, duracion) {
             dynamicContent.innerHTML = '<div style="color:red; text-align:center;">Error al cargar el reproductor de YouTube</div>';
             clearAll();
         }
-    }, duracion, true); // El último parámetro indica que es video de YouTube
+    }, duracion, true);
 }
 
 async function checkEstado() {
@@ -190,7 +184,6 @@ async function checkEstado() {
         const overlay = document.getElementById("overlay");
         const isOverlayVisible = overlay.style.display !== "none";
         
-        // ... Lógica para verificar el contenido programado (cumpleaños, anuncios, pausas)
         if (data.activo) {
             let contentId;
             if (data.tipo === "cumpleanos") {
@@ -223,15 +216,21 @@ async function checkEstado() {
     } catch (error) {
         console.error("Error al verificar estado:", error);
         clearAll();
+        
         const mainIframe = document.getElementById("main-iframe");
         mainIframe.style.display = "block";
         
         const dynamicContent = document.getElementById("dynamic-content");
         dynamicContent.innerHTML = `<div style="color:red; text-align:center;">Error de conexión. Reintentando...</div>`;
         dynamicContent.style.display = 'block';
+        const overlay = document.getElementById("overlay");
         overlay.style.display = "flex";
+        
+        // ✅ CORRECCIÓN CLAVE: Después de 5s, no solo oculta el overlay, sino que vuelve a intentar
         setTimeout(() => {
-            overlay.style.display = "none";
+            overlay.style.display "none";
+            // 👇 Vuelve a llamar a checkEstado() para reintentar inmediatamente
+            checkEstado();
         }, 5000);
     }
 }
@@ -239,18 +238,15 @@ async function checkEstado() {
 function initializeApplication() {
     console.log("Página cargada. Iniciando.");
 
-    // Espera 2 segundos antes de intentar la primera conexión
-    setTimeout(() => {
-        // Muestra el overlay de inicio si el usuario no ha interactuado.
-        if (!userInteracted) {
-            document.getElementById('init-overlay').style.display = 'flex';
-            document.getElementById('main-iframe').style.display = 'none';
-        } else {
-            // Si ya interactuó, inicia el chequeo de estado inmediatamente.
-            checkEstado();
-            checkingInterval = setInterval(checkEstado, 15000);
-        }
-    }, 2000); // ⭐ Espera 2 segundos para evitar problemas de conexión al inicio
+    // Muestra el overlay de inicio si el usuario no ha interactuado.
+    if (!userInteracted) {
+        document.getElementById('init-overlay').style.display = 'flex';
+        document.getElementById('main-iframe').style.display = 'none';
+    } else {
+        // Si ya interactuó, inicia el chequeo de estado inmediatamente.
+        checkEstado();
+        checkingInterval = setInterval(checkEstado, 15000);
+    }
 }
 
 // <<< FUNCIÓN DE INTERACCIÓN DE USUARIO (LA TRAMPA LEGAL) >>>
