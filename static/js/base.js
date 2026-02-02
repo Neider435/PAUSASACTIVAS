@@ -239,15 +239,18 @@ async function checkEstado() {
 function initializeApplication() {
     console.log("Página cargada. Iniciando.");
 
-    // Muestra el overlay de inicio si el usuario no ha interactuado.
-    if (!userInteracted) {
-        document.getElementById('init-overlay').style.display = 'flex';
-        document.getElementById('main-iframe').style.display = 'none';
-    } else {
-        // Si ya interactuó, inicia el chequeo de estado inmediatamente.
-        checkEstado();
-        checkingInterval = setInterval(checkEstado, 15000);
-    }
+    // Espera 2 segundos antes de intentar la primera conexión
+    setTimeout(() => {
+        // Muestra el overlay de inicio si el usuario no ha interactuado.
+        if (!userInteracted) {
+            document.getElementById('init-overlay').style.display = 'flex';
+            document.getElementById('main-iframe').style.display = 'none';
+        } else {
+            // Si ya interactuó, inicia el chequeo de estado inmediatamente.
+            checkEstado();
+            checkingInterval = setInterval(checkEstado, 15000);
+        }
+    }, 2000); // ⭐ Espera 2 segundos para evitar problemas de conexión al inicio
 }
 
 // <<< FUNCIÓN DE INTERACCIÓN DE USUARIO (LA TRAMPA LEGAL) >>>
