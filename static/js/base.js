@@ -192,6 +192,15 @@ async function checkEstado() {
     const cumpleanosData = await cumpleResponse.json();
     const horariosData = await horarioResponse.json();
 
+    // Aseguramos que cumpleanosData sea un array
+    const cumpleanosArray = Array.isArray(cumpleanosData) ? cumpleanosData : [cumpleanosData];
+    
+    // Extraer los horarios de la clave "0" si existe
+    let horariosArray = [];
+    if (horariosData && horariosData["0"] && horariosData["0"].cumpleanos) {
+      horariosArray = Array.isArray(horariosData["0"].cumpleanos) ? horariosData["0"].cumpleanos : [horariosData["0"].cumpleanos];
+    }
+
     // Fecha y hora actual
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -202,8 +211,13 @@ async function checkEstado() {
     let activeContent = null;
 
     // 1. Verificar cumpleaños
-    for (const persona of cumpleanosData) {
-      const birthDate = new Date(now.getFullYear(), persona.mes - 1, persona.dia);
+    for (const persona of cumpleanosArray) {
+      // Parsear la fecha en formato "MM-DD"
+      const [mesStr, diaStr] = persona.fecha.split('-');
+      const mes = parseInt(mesStr, 10);
+      const dia = parseInt(diaStr, 10);
+      
+      const birthDate = new Date(now.getFullYear(), mes - 1, dia);
       if (birthDate.toDateString() === today.toDateString()) {
         activeContent = {
           activo: true,
@@ -215,29 +229,30 @@ async function checkEstado() {
       }
     }
 
-    // 2. Si no hay cumpleaños, verificar pausas activas
-    if (!activeContent) {
-      for (const horario of horariosData) {
-        const [startH, startM] = horario.hora_inicio.split(':').map(Number);
-        const [endH, endM] = horario.hora_fin.split(':').map(Number);
-        const startTime = startH * 60 + startM;
-        const endTime = endH * 60 + endM;
-
+    // 2. Si hay cumpleaños, verificar si estamos en una de las horas programadas
+    if (activeContent) {
+      let isInScheduledTime = false;
+      let scheduledDuration = 60; // Duración por defecto
+      
+      for (const horario of horariosArray) {
+        const [horaStr, minutoStr] = horario.hora_inicio.split(':').map(Number);
+        const startTime = horaStr * 60 + minutoStr;
+        const endTime = startTime + (horario.duracion_por_persona || 60);
+        
         if (currentTime >= startTime && currentTime <= endTime) {
-          activeContent = {
-            activo: true,
-            tipo: "pausas_activas",
-            archivo: horario.video_id,
-            duracion: 5
-          };
+          isInScheduledTime = true;
+          scheduledDuration = horario.duracion_por_persona || 60;
           break;
         }
       }
-    }
-
-    // Si no hay contenido activo
-    if (!activeContent) {
-      activeContent = { activo: false };
+      
+      if (!isInScheduledTime) {
+        // No estamos en horario programado para cumpleaños
+        activeContent = { activo: false };
+      } else {
+        // Estamos en horario programado, usar la duración especificada
+        activeContent.duracion = scheduledDuration;
+      }
     }
 
     // --- Lógica de visualización (igual que antes) ---
