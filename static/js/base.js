@@ -7,6 +7,10 @@ let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
 let userInteracted = false; // <<< BANDERA CLAVE
 
+// Detectar si estamos en una TV o dispositivo con pantalla grande
+const isTV = window.screen && window.screen.width > 1280 && window.screen.height > 720;
+console.log(`Dispositivo detectado: ${isTV ? 'TV/Gran pantalla' : 'Computadora/Móvil'}`);
+
 // Esta función es llamada automáticamente por la API de YouTube
 function onYouTubeIframeAPIReady() {
   console.log("API de YouTube lista.");
@@ -20,7 +24,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube.com/iframe_api"; // ✅ Sin espacios
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -101,9 +105,13 @@ function showBirthdayMessage(nombre, duracion) {
   );
 }
 
+// ============================================
+// FUNCIÓN MEJORADA: playYoutubeVideo() - Funciona en TVs
+// ============================================
 async function playYoutubeVideo(videoId, duracion) {
-  const muted = !userInteracted;
-  console.log(`Intentando reproducir video de YouTube con ID: ${videoId}. Muted: ${muted}`);
+  // ✅ EN TVs, SIEMPRE MUTEADO para que funcione el autoplay
+  const muted = isTV ? true : !userInteracted;
+  console.log(`📺 Dispositivo: ${isTV ? 'TV' : 'Computadora'} | Muted: ${muted}`);
   
   showOverlay(
     `youtube_${videoId}`, 
@@ -114,9 +122,12 @@ async function playYoutubeVideo(videoId, duracion) {
       document.getElementById('audio-button').style.display = 'none';
       
       try {
+        // Intentar usar la API de YouTube
         await loadYoutubeApi();
+        
+        // ✅ Añadir parámetro 'origin' para evitar errores CORS
         player = new YT.Player('youtube-player', {
-          host: 'https://www.youtube-nocookie.com',
+          host: 'https://www.youtube-nocookie.com', // ✅ Sin espacios
           height: '100%',
           width: '100%',
           videoId: videoId,
@@ -128,11 +139,12 @@ async function playYoutubeVideo(videoId, duracion) {
             'mute': muted ? 1 : 0,
             'rel': 0,
             'showinfo': 0,
-            'iv_load_policy': 3
+            'iv_load_policy': 3,
+            'origin': window.location.origin // ✅ Dinámico para cualquier dominio
           },
           events: {
             'onReady': (event) => {
-              console.log("Video YouTube listo para reproducir");
+              console.log("✅ Video YouTube listo para reproducir");
               event.target.playVideo();
               if (!muted) {
                 event.target.setVolume(100);
@@ -147,15 +159,49 @@ async function playYoutubeVideo(videoId, duracion) {
               }
             },
             'onError': (event) => {
-              console.error("Error en YouTube Player:", event.data);
-              clearAll();
+              console.error("❌ Error en YouTube Player:", event.data);
+              
+              // ✅ FALLBACK: Si hay error, usar iframe directo
+              console.log("🔄 Intentando fallback con iframe...");
+              dynamicContent.innerHTML = `
+                <iframe 
+                  width="100%" 
+                  height="100%" 
+                  src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
+                  frameborder="0" 
+                  allow="autoplay; encrypted-media" 
+                  allowfullscreen
+                  style="border: none;">
+                </iframe>
+              `;
             }
           }
         });
+        
       } catch (error) {
-        console.error("Error al cargar la API o crear el reproductor:", error);
-        dynamicContent.innerHTML = '<div style="color:red; text-align:center;">Error al cargar el reproductor de YouTube</div>';
-        clearAll();
+        console.error("❌ Error al cargar la API de YouTube:", error);
+        
+        // ✅ FALLBACK: Si la API falla, usar iframe directo
+        console.log("🔄 Usando iframe directo como fallback...");
+        dynamicContent.innerHTML = `
+          <iframe 
+            width="100%" 
+            height="100%" 
+            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=${muted ? '1' : '0'}&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
+            frameborder="0" 
+            allow="autoplay; encrypted-media" 
+            allowfullscreen
+            style="border: none;">
+          </iframe>
+        `;
+        
+        // Configurar timeout para cerrar el overlay
+        if (duracion) {
+          currentOverlayTimeout = setTimeout(() => {
+            console.log(`Duración terminada. Cerrando overlay.`);
+            clearAll();
+          }, duracion * 1000);
+        }
       }
     }, 
     duracion
