@@ -240,9 +240,11 @@ async function checkEstado() {
         const minutoStr = timeParts[1] || 0;
         
         const startTime = horaStr * 60 + minutoStr;
-        const endTime = startTime + (horario.duracion_por_persona || 60);
+        // ⚠️ CORRECCIÓN: Convertir segundos a minutos para el cálculo del rango
+        const duracionMinutos = (horario.duracion_por_persona || 60) / 60;
+        const endTime = startTime + duracionMinutos;
         
-        console.log(`  Horario: ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${horario.duracion_por_persona || 60} min`);
+        console.log(`  Horario: ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${horario.duracion_por_persona || 60} seg (${duracionMinutos} min)`);
         console.log(`  Rango: ${startTime} - ${endTime} minutos`);
         
         if (currentTime >= startTime && currentTime <= endTime) {
