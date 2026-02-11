@@ -348,7 +348,7 @@
         "pausas_activas": {
             "pausa_1": [
                 {
-                    "hora_inicio": "07:50:00",
+                    "hora_inicio": "09:55:00",
                     "archivo": "WfdH9x3C0lg",
                     "duracion": 600
                 },
@@ -669,6 +669,7 @@
         }
     }
 }
+
 
 
 
