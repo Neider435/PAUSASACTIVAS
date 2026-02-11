@@ -163,7 +163,7 @@ async function playYoutubeVideo(videoId, duracion) {
 }
 
 // ============================================
-// FUNCIÓN CORREGIDA: checkEstado()
+// FUNCIÓN COMPLETA: checkEstado() - Maneja TODO
 // ============================================
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') {
@@ -189,15 +189,32 @@ async function checkEstado() {
 
     const cumpleanosArray = Array.isArray(cumpleanosData) ? cumpleanosData : [cumpleanosData];
     
-    // Extraer los horarios de la clave "0" si existe
-    let horariosArray = [];
-    if (horariosData && horariosData["0"] && horariosData["0"].cumpleanos) {
-      horariosArray = Array.isArray(horariosData["0"].cumpleanos) ? horariosData["0"].cumpleanos : [horariosData["0"].cumpleanos];
-    }
-    
-    console.log("Horarios cargados:", horariosArray);
-
+    // Obtener el día de la semana actual (0 = Domingo, 1 = Lunes, ..., 6 = Sábado)
     const now = new Date();
+    const dayOfWeek = now.getDay(); // 0-6
+    const todayKey = dayOfWeek.toString();
+    
+    console.log(`Día de la semana: ${dayOfWeek} (Clave: "${todayKey}")`);
+
+    // Obtener la configuración para el día actual
+    const todayConfig = horariosData[todayKey] || horariosData["0"];
+    
+    if (!todayConfig) {
+      console.error(`No se encontró configuración para el día ${todayKey}`);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      return;
+    }
+
+    // Extraer los diferentes tipos de contenido
+    const cumpleanosHorarios = todayConfig.cumpleanos || [];
+    const anunciosVideo = todayConfig.anuncios_video || [];
+    const pausasActivas = todayConfig.pausas_activas || {};
+    
+    console.log("Configuración del día:");
+    console.log(`  - Cumpleaños: ${cumpleanosHorarios.length} horarios`);
+    console.log(`  - Anuncios: ${anunciosVideo.length} videos`);
+    console.log(`  - Pausas activas: ${Object.keys(pausasActivas).length} grupos`);
+
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -207,17 +224,17 @@ async function checkEstado() {
     console.log(`Fecha actual: ${today.toDateString()}`);
 
     let activeContent = null;
-    let birthdayPerson = null;
 
+    // ============================================
     // 1. Verificar si hay cumpleaños HOY
+    // ============================================
+    let birthdayPerson = null;
     for (const persona of cumpleanosArray) {
       const [mesStr, diaStr] = persona.fecha.split('-');
       const mes = parseInt(mesStr, 10);
       const dia = parseInt(diaStr, 10);
       
       const birthDate = new Date(now.getFullYear(), mes - 1, dia);
-      
-      console.log(`Verificando cumpleaños: ${persona.nombre} - ${dia}/${mes} - Fecha: ${birthDate.toDateString()}`);
       
       if (birthDate.toDateString() === today.toDateString()) {
         birthdayPerson = persona;
@@ -226,51 +243,109 @@ async function checkEstado() {
       }
     }
 
-    // 2. Si hay cumpleaños HOY, verificar si estamos en un horario programado
+    // Si hay cumpleaños, verificar horarios
     if (birthdayPerson) {
-      console.log(`Hay cumpleaños hoy. Verificando horarios programados...`);
+      console.log(`Verificando horarios de cumpleaños...`);
       
-      let isInScheduledTime = false;
-      let scheduledDuration = 60;
-      
-      for (const horario of horariosArray) {
-        // Parsear hora_inicio que puede ser "HH:MM:SS" o "HH:MM"
+      for (const horario of cumpleanosHorarios) {
         const timeParts = horario.hora_inicio.split(':').map(Number);
         const horaStr = timeParts[0];
         const minutoStr = timeParts[1] || 0;
         
         const startTime = horaStr * 60 + minutoStr;
-        // ⚠️ CORRECCIÓN: Convertir segundos a minutos para el cálculo del rango
         const duracionMinutos = (horario.duracion_por_persona || 60) / 60;
         const endTime = startTime + duracionMinutos;
         
-        console.log(`  Horario: ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${horario.duracion_por_persona || 60} seg (${duracionMinutos} min)`);
+        console.log(`  Horario: ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${horario.duracion_por_persona || 60} seg`);
         console.log(`  Rango: ${startTime} - ${endTime} minutos`);
         
         if (currentTime >= startTime && currentTime <= endTime) {
-          isInScheduledTime = true;
-          scheduledDuration = horario.duracion_por_persona || 60;
-          console.log(`  ✓ ESTAMOS EN HORARIO PROGRAMADO!`);
+          activeContent = {
+            activo: true,
+            tipo: "cumpleanos",
+            nombre: birthdayPerson.nombre,
+            duracion: horario.duracion_por_persona || 60
+          };
+          console.log(`  ✓ ESTAMOS EN HORARIO DE CUMPLEAÑOS!`);
           break;
-        } else {
-          console.log(`  ✗ Fuera de este horario`);
         }
       }
+    }
+
+    // ============================================
+    // 2. Verificar anuncios de video (si no hay cumpleaños activo)
+    // ============================================
+    if (!activeContent) {
+      console.log(`Verificando anuncios de video...`);
       
-      if (isInScheduledTime) {
-        activeContent = {
-          activo: true,
-          tipo: "cumpleanos",
-          nombre: birthdayPerson.nombre,
-          duracion: scheduledDuration
-        };
-        console.log(`✓ CONTENIDO ACTIVO: Cumpleaños de ${birthdayPerson.nombre} por ${scheduledDuration} segundos`);
-      } else {
-        console.log(`✗ No estamos en ningún horario programado para mostrar el cumpleaños`);
-        activeContent = { activo: false };
+      for (const anuncio of anunciosVideo) {
+        const timeParts = anuncio.hora_inicio.split(':').map(Number);
+        const horaStr = timeParts[0];
+        const minutoStr = timeParts[1] || 0;
+        
+        const startTime = horaStr * 60 + minutoStr;
+        const duracionMinutos = (anuncio.duracion || 60) / 60;
+        const endTime = startTime + duracionMinutos;
+        
+        console.log(`  Anuncio: ${anuncio.archivo} - ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${anuncio.duracion || 60} seg`);
+        console.log(`  Rango: ${startTime} - ${endTime} minutos`);
+        
+        if (currentTime >= startTime && currentTime <= endTime) {
+          activeContent = {
+            activo: true,
+            tipo: "anuncio_video",
+            archivo: anuncio.archivo,
+            duracion: anuncio.duracion || 60
+          };
+          console.log(`  ✓ ESTAMOS EN HORARIO DE ANUNCIO!`);
+          break;
+        }
       }
-    } else {
-      console.log("No hay cumpleaños hoy.");
+    }
+
+    // ============================================
+    // 3. Verificar pausas activas (si no hay nada activo)
+    // ============================================
+    if (!activeContent) {
+      console.log(`Verificando pausas activas...`);
+      
+      // Iterar sobre todos los grupos de pausas (pausa_1, pausa_2, etc.)
+      for (const pausaGroup of Object.values(pausasActivas)) {
+        const pausas = Array.isArray(pausaGroup) ? pausaGroup : [pausaGroup];
+        
+        for (const pausa of pausas) {
+          const timeParts = pausa.hora_inicio.split(':').map(Number);
+          const horaStr = timeParts[0];
+          const minutoStr = timeParts[1] || 0;
+          
+          const startTime = horaStr * 60 + minutoStr;
+          const duracionMinutos = (pausa.duracion || 600) / 60;
+          const endTime = startTime + duracionMinutos;
+          
+          console.log(`  Pausa: ${pausa.archivo} - ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${pausa.duracion || 600} seg`);
+          console.log(`  Rango: ${startTime} - ${endTime} minutos`);
+          
+          if (currentTime >= startTime && currentTime <= endTime) {
+            activeContent = {
+              activo: true,
+              tipo: "pausas_activas",
+              archivo: pausa.archivo,
+              duracion: pausa.duracion || 600
+            };
+            console.log(`  ✓ ESTAMOS EN HORARIO DE PAUSA ACTIVA!`);
+            break;
+          }
+        }
+        
+        if (activeContent) break; // Salir si ya encontramos algo
+      }
+    }
+
+    // ============================================
+    // 4. Si no hay contenido activo
+    // ============================================
+    if (!activeContent) {
+      console.log("✗ No hay contenido activo en este momento");
       activeContent = { activo: false };
     }
 
@@ -289,7 +364,7 @@ async function checkEstado() {
       }
 
       if (!playedFiles.has(contentId)) {
-        console.log(`Mostrando contenido: ${activeContent.tipo} - ${activeContent.nombre || activeContent.archivo}`);
+        console.log(`🎯 MOSTRANDO: ${activeContent.tipo} - ${activeContent.nombre || activeContent.archivo} (${activeContent.duracion} seg)`);
         if (activeContent.tipo === "cumpleanos") {
           showBirthdayMessage(activeContent.nombre, activeContent.duracion);
         } else if (activeContent.tipo === "anuncio_video" || activeContent.tipo === "pausas_activas") {
@@ -300,10 +375,12 @@ async function checkEstado() {
             clearAll();
           }
         }
+      } else {
+        console.log(`⏭️  Ya se mostró este contenido hoy: ${contentId}`);
       }
     } else {
       if (isOverlayVisible) {
-        console.log("No hay contenido activo. Cerrando overlay.");
+        console.log("Cerrando overlay - no hay contenido activo.");
         clearAll();
       }
       playedFiles.clear();
