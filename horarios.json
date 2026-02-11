@@ -315,7 +315,7 @@
         ],
         "anuncios_video": [
             {
-                "hora_inicio": "07:51:00",
+                "hora_inicio": "08:00:00",
                 "archivo": "dGjbt4grjLU",
                 "duracion": 60
             },
@@ -669,6 +669,7 @@
         }
     }
 }
+
 
 
 
