@@ -89,13 +89,11 @@ function showBirthdayMessage(nombre, duracion) {
     `cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`, 
     () => {
       const dynamicContent = document.getElementById("dynamic-content");
-      const birthdayText = document.getElementById("birthday-text"); // Este es el contenedor del texto
+      const birthdayText = document.getElementById("birthday-text");
       
-      // 1. Inyectar la imagen de fondo en dynamicContent (Usando la corrección de imagen)
       dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
       dynamicContent.style.display = 'block';
       
-      // 2. Colocar solo el nombre dentro del div 'birthday-text' (Usando la corrección de texto)
       birthdayText.innerHTML = `${nombre}`;
       birthdayText.style.display = 'block';
     }, 
@@ -104,7 +102,6 @@ function showBirthdayMessage(nombre, duracion) {
 }
 
 async function playYoutubeVideo(videoId, duracion) {
-  // Si el usuario ya interactuó, muted es false (con audio). Si no, es true (sin audio).
   const muted = !userInteracted;
   console.log(`Intentando reproducir video de YouTube con ID: ${videoId}. Muted: ${muted}`);
   
@@ -128,7 +125,7 @@ async function playYoutubeVideo(videoId, duracion) {
             'playsinline': 1,
             'controls': 0,
             'modestbranding': 1,
-            'mute': muted ? 1 : 0, // Utiliza la bandera muted
+            'mute': muted ? 1 : 0,
             'rel': 0,
             'showinfo': 0,
             'iv_load_policy': 3
@@ -137,7 +134,6 @@ async function playYoutubeVideo(videoId, duracion) {
             'onReady': (event) => {
               console.log("Video YouTube listo para reproducir");
               event.target.playVideo();
-              // Si no está muteado, nos aseguramos de que el volumen esté al 100
               if (!muted) {
                 event.target.setVolume(100);
                 event.target.unMute();
@@ -167,19 +163,18 @@ async function playYoutubeVideo(videoId, duracion) {
 }
 
 // ============================================
-// FUNCIÓN MODIFICADA: checkEstado()
+// FUNCIÓN CORREGIDA: checkEstado()
 // ============================================
 async function checkEstado() {
-  // Si el overlay de inicio está activo, no hacemos nada más.
   if (document.getElementById('init-overlay').style.display === 'flex') {
     console.log("Esperando interacción de inicio...");
     return;
   }
 
   try {
-    console.log("Verificando estado desde archivos JSON locales...");
-
-    // Cargar ambos archivos JSON directamente
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("Verificando estado desde archivos JSON...");
+    
     const [cumpleResponse, horarioResponse] = await Promise.all([
       fetch("cumpleanos.json"),
       fetch("horarios.json")
@@ -192,7 +187,6 @@ async function checkEstado() {
     const cumpleanosData = await cumpleResponse.json();
     const horariosData = await horarioResponse.json();
 
-    // Aseguramos que cumpleanosData sea un array
     const cumpleanosArray = Array.isArray(cumpleanosData) ? cumpleanosData : [cumpleanosData];
     
     // Extraer los horarios de la clave "0" si existe
@@ -200,62 +194,87 @@ async function checkEstado() {
     if (horariosData && horariosData["0"] && horariosData["0"].cumpleanos) {
       horariosArray = Array.isArray(horariosData["0"].cumpleanos) ? horariosData["0"].cumpleanos : [horariosData["0"].cumpleanos];
     }
+    
+    console.log("Horarios cargados:", horariosArray);
 
-    // Fecha y hora actual
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTime = currentHour * 60 + currentMinute;
+    
+    console.log(`Hora actual: ${currentHour}:${currentMinute.toString().padStart(2, '0')} (${currentTime} minutos desde medianoche)`);
+    console.log(`Fecha actual: ${today.toDateString()}`);
 
     let activeContent = null;
+    let birthdayPerson = null;
 
-    // 1. Verificar cumpleaños
+    // 1. Verificar si hay cumpleaños HOY
     for (const persona of cumpleanosArray) {
-      // Parsear la fecha en formato "MM-DD"
       const [mesStr, diaStr] = persona.fecha.split('-');
       const mes = parseInt(mesStr, 10);
       const dia = parseInt(diaStr, 10);
       
       const birthDate = new Date(now.getFullYear(), mes - 1, dia);
+      
+      console.log(`Verificando cumpleaños: ${persona.nombre} - ${dia}/${mes} - Fecha: ${birthDate.toDateString()}`);
+      
       if (birthDate.toDateString() === today.toDateString()) {
-        activeContent = {
-          activo: true,
-          tipo: "cumpleanos",
-          nombre: persona.nombre,
-          duracion: 10
-        };
+        birthdayPerson = persona;
+        console.log(`✓ CUMPLEAÑOS HOY: ${persona.nombre}`);
         break;
       }
     }
 
-    // 2. Si hay cumpleaños, verificar si estamos en una de las horas programadas
-    if (activeContent) {
+    // 2. Si hay cumpleaños HOY, verificar si estamos en un horario programado
+    if (birthdayPerson) {
+      console.log(`Hay cumpleaños hoy. Verificando horarios programados...`);
+      
       let isInScheduledTime = false;
-      let scheduledDuration = 60; // Duración por defecto
+      let scheduledDuration = 60;
       
       for (const horario of horariosArray) {
-        const [horaStr, minutoStr] = horario.hora_inicio.split(':').map(Number);
+        // Parsear hora_inicio que puede ser "HH:MM:SS" o "HH:MM"
+        const timeParts = horario.hora_inicio.split(':').map(Number);
+        const horaStr = timeParts[0];
+        const minutoStr = timeParts[1] || 0;
+        
         const startTime = horaStr * 60 + minutoStr;
         const endTime = startTime + (horario.duracion_por_persona || 60);
+        
+        console.log(`  Horario: ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${horario.duracion_por_persona || 60} min`);
+        console.log(`  Rango: ${startTime} - ${endTime} minutos`);
         
         if (currentTime >= startTime && currentTime <= endTime) {
           isInScheduledTime = true;
           scheduledDuration = horario.duracion_por_persona || 60;
+          console.log(`  ✓ ESTAMOS EN HORARIO PROGRAMADO!`);
           break;
+        } else {
+          console.log(`  ✗ Fuera de este horario`);
         }
       }
       
-      if (!isInScheduledTime) {
-        // No estamos en horario programado para cumpleaños
-        activeContent = { activo: false };
+      if (isInScheduledTime) {
+        activeContent = {
+          activo: true,
+          tipo: "cumpleanos",
+          nombre: birthdayPerson.nombre,
+          duracion: scheduledDuration
+        };
+        console.log(`✓ CONTENIDO ACTIVO: Cumpleaños de ${birthdayPerson.nombre} por ${scheduledDuration} segundos`);
       } else {
-        // Estamos en horario programado, usar la duración especificada
-        activeContent.duracion = scheduledDuration;
+        console.log(`✗ No estamos en ningún horario programado para mostrar el cumpleaños`);
+        activeContent = { activo: false };
       }
+    } else {
+      console.log("No hay cumpleaños hoy.");
+      activeContent = { activo: false };
     }
 
-    // --- Lógica de visualización (igual que antes) ---
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    // --- Lógica de visualización ---
     const overlay = document.getElementById("overlay");
     const isOverlayVisible = overlay.style.display !== "none";
 
@@ -268,7 +287,7 @@ async function checkEstado() {
       }
 
       if (!playedFiles.has(contentId)) {
-        console.log(`Nuevo contenido activo: ${activeContent.tipo} - ${activeContent.archivo || activeContent.nombre}`);
+        console.log(`Mostrando contenido: ${activeContent.tipo} - ${activeContent.nombre || activeContent.archivo}`);
         if (activeContent.tipo === "cumpleanos") {
           showBirthdayMessage(activeContent.nombre, activeContent.duracion);
         } else if (activeContent.tipo === "anuncio_video" || activeContent.tipo === "pausas_activas") {
@@ -282,14 +301,14 @@ async function checkEstado() {
       }
     } else {
       if (isOverlayVisible) {
-        console.log("No hay contenido programado. Volviendo a la página principal.");
+        console.log("No hay contenido activo. Cerrando overlay.");
         clearAll();
       }
       playedFiles.clear();
     }
 
   } catch (error) {
-    console.error("Error al verificar estado desde JSONs:", error);
+    console.error("Error al verificar estado:", error);
     clearAll();
     const mainIframe = document.getElementById("main-iframe");
     mainIframe.style.display = "block";
@@ -304,25 +323,21 @@ async function checkEstado() {
 }
 
 function initializeApplication() {
-  console.log("Página cargada. Iniciando.");
-  // Muestra el overlay de inicio si el usuario no ha interactuado.
+  console.log("Página cargada. Iniciando aplicación...");
   if (!userInteracted) {
     document.getElementById('init-overlay').style.display = 'flex';
     document.getElementById('main-iframe').style.display = 'none';
   } else {
-    // Si ya interactuó, inicia el chequeo de estado inmediatamente.
     checkEstado();
     checkingInterval = setInterval(checkEstado, 15000);
   }
 }
 
-// <<< FUNCIÓN DE INTERACCIÓN DE USUARIO (LA TRAMPA LEGAL) >>>
 function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
   document.getElementById('main-iframe').style.display = 'block';
   console.log("Interacción de usuario registrada. Habilitando sonido.");
-  // Inicia el chequeo de estado después de la interacción
   checkEstado();
   checkingInterval = setInterval(checkEstado, 15000);
 }
