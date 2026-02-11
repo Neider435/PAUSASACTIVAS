@@ -7,9 +7,9 @@ let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
 let userInteracted = false; // <<< BANDERA CLAVE
 
-// Detectar si estamos en una TV o dispositivo con pantalla grande
-const isTV = window.screen && window.screen.width > 1280 && window.screen.height > 720;
-console.log(`Dispositivo detectado: ${isTV ? 'TV/Gran pantalla' : 'Computadora/Móvil'}`);
+// Detectar si estamos en una TV o dispositivo móvil
+const isMobileOrTV = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|SmartTV|TV|Xbox|PlayStation|Nintendo|Apple TV|Samsung TV/i.test(navigator.userAgent);
+console.log(`Dispositivo detectado: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'}`);
 
 // Esta función es llamada automáticamente por la API de YouTube
 function onYouTubeIframeAPIReady() {
@@ -24,7 +24,7 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    tag.src = "https://www.youtube.com/iframe_api"; // ✅ Sin espacios
+    tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
       window.onYouTubeIframeAPIReady = () => {
@@ -106,41 +106,43 @@ function showBirthdayMessage(nombre, duracion) {
 }
 
 // ============================================
-// FUNCIÓN MEJORADA: playYoutubeVideo() - Funciona en TVs
+// FUNCIÓN CORREGIDA: playYoutubeVideo() - Funciona en TV y Celular
 // ============================================
 async function playYoutubeVideo(videoId, duracion) {
-  // ✅ EN TVs, SIEMPRE MUTEADO para que funcione el autoplay
-  const muted = isTV ? true : !userInteracted;
-  console.log(`📺 Dispositivo: ${isTV ? 'TV' : 'Computadora'} | Muted: ${muted}`);
+  // En móviles y TV, SIEMPRE MUTEADO para que funcione el autoplay
+  const muted = isMobileOrTV ? true : !userInteracted;
+  console.log(`📱 Dispositivo: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'} | Muted: ${muted}`);
   
   showOverlay(
     `youtube_${videoId}`, 
     async () => {
       const dynamicContent = document.getElementById("dynamic-content");
-      dynamicContent.innerHTML = `<div id="youtube-player" style="width: 100%; height: 100%;"></div>`;
-      dynamicContent.style.display = 'block';
+      
+      // Asegurar que el contenedor del video esté visible
+      dynamicContent.innerHTML = `<div id="youtube-player" style="width: 100%; height: 100%; position: relative;"></div>`;
+      dynamicContent.style.display = 'flex';
       document.getElementById('audio-button').style.display = 'none';
       
       try {
         // Intentar usar la API de YouTube
         await loadYoutubeApi();
         
-        // ✅ Añadir parámetro 'origin' para evitar errores CORS
+        // Añadir parámetro 'origin' para evitar errores CORS
         player = new YT.Player('youtube-player', {
-          host: 'https://www.youtube-nocookie.com', // ✅ Sin espacios
+          host: 'https://www.youtube-nocookie.com',
           height: '100%',
           width: '100%',
           videoId: videoId,
           playerVars: {
             'autoplay': 1,
-            'playsinline': 1,
+            'playsinline': 1, // Crucial para móviles
             'controls': 0,
             'modestbranding': 1,
             'mute': muted ? 1 : 0,
             'rel': 0,
             'showinfo': 0,
             'iv_load_policy': 3,
-            'origin': window.location.origin // ✅ Dinámico para cualquier dominio
+            'origin': window.location.origin // Dinámico para cualquier dominio
           },
           events: {
             'onReady': (event) => {
@@ -169,11 +171,12 @@ async function playYoutubeVideo(videoId, duracion) {
                   height="100%" 
                   src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
                   frameborder="0" 
-                  allow="autoplay; encrypted-media" 
+                  allow="autoplay; encrypted-media; fullscreen" 
                   allowfullscreen
-                  style="border: none;">
+                  style="border: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
                 </iframe>
               `;
+              dynamicContent.style.display = 'flex';
             }
           }
         });
@@ -187,13 +190,14 @@ async function playYoutubeVideo(videoId, duracion) {
           <iframe 
             width="100%" 
             height="100%" 
-            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=${muted ? '1' : '0'}&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
+            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
             frameborder="0" 
-            allow="autoplay; encrypted-media" 
+            allow="autoplay; encrypted-media; fullscreen" 
             allowfullscreen
-            style="border: none;">
+            style="border: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
           </iframe>
         `;
+        dynamicContent.style.display = 'flex';
         
         // Configurar timeout para cerrar el overlay
         if (duracion) {
