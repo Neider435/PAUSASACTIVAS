@@ -19,12 +19,12 @@ collections:
     label: "🎂 Cumpleaños"
     folder: "data"
     create: true
-    slug: "{{slug}}"
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     extension: json
     format: json
     fields:
       - { label: "Nombre Completo", name: "nombre", widget: "string", required: true }
-      - { label: "Fecha (MM-DD)", name: "fecha", widget: "string", required: true, pattern: ["^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$", "Formato: MM-DD (ej: 01-04)"] }
+      - { label: "Fecha (MM-DD)", name: "fecha", widget: "string", required: true }
 
   # ============================================
   # COLECCIÓN: HORARIOS (ARCHIVO ÚNICO)
@@ -36,26 +36,26 @@ collections:
         label: "Horarios Semanales"
         name: "horarios_config"
         fields:
-          - label: "Domingo"
+          - label: "Domingo (0)"
             name: "0"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
@@ -81,26 +81,26 @@ collections:
                       - { label: "Video ID", name: "archivo", widget: "string" }
                       - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 600 }
 
-          - label: "Lunes"
+          - label: "Lunes (1)"
             name: "1"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
@@ -126,26 +126,26 @@ collections:
                       - { label: "Video ID", name: "archivo", widget: "string" }
                       - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 600 }
 
-          - label: "Martes"
+          - label: "Martes (2)"
             name: "2"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
@@ -171,26 +171,26 @@ collections:
                       - { label: "Video ID", name: "archivo", widget: "string" }
                       - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 600 }
 
-          - label: "Miércoles"
+          - label: "Miércoles (3)"
             name: "3"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
@@ -216,26 +216,26 @@ collections:
                       - { label: "Video ID", name: "archivo", widget: "string" }
                       - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 600 }
 
-          - label: "Jueves"
+          - label: "Jueves (4)"
             name: "4"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
@@ -261,26 +261,26 @@ collections:
                       - { label: "Video ID", name: "archivo", widget: "string" }
                       - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 600 }
 
-          - label: "Viernes"
+          - label: "Viernes (5)"
             name: "5"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
@@ -306,26 +306,26 @@ collections:
                       - { label: "Video ID", name: "archivo", widget: "string" }
                       - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 600 }
 
-          - label: "Sábado"
+          - label: "Sábado (6)"
             name: "6"
             widget: "object"
             collapsed: true
             fields:
-              - label: "Horarios de Cumpleaños"
+              - label: "Cumpleaños"
                 name: "cumpleanos"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Duración por Persona (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
+                  - { label: "Duración (segundos)", name: "duracion_por_persona", widget: "number", default: 60 }
               
-              - label: "Anuncios de Video"
+              - label: "Anuncios Video"
                 name: "anuncios_video"
                 widget: "list"
                 collapsed: true
                 fields:
                   - { label: "Hora Inicio", name: "hora_inicio", widget: "time" }
-                  - { label: "Video ID (YouTube)", name: "archivo", widget: "string" }
+                  - { label: "Video ID YouTube", name: "archivo", widget: "string" }
                   - { label: "Duración (segundos)", name: "duracion", widget: "number", default: 60 }
               
               - label: "Pausas Activas"
