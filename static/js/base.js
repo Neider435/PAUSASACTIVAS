@@ -226,8 +226,8 @@ async function checkEstado() {
     console.log("Verificando estado desde archivos JSON...");
     
     const [cumpleResponse, horarioResponse] = await Promise.all([
-      fetch("cumpleanos.json"),
-      fetch("horarios.json")
+      fetch("/data/cumpleanos.json"),
+      fetch("/data/horarios.json")
     ]);
 
     if (!cumpleResponse.ok || !horarioResponse.ok) {
@@ -472,3 +472,4 @@ function handleStartSound() {
 }
 
 window.addEventListener('load', initializeApplication);
+
