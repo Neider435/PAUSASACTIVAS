@@ -124,7 +124,7 @@
         ],
         "anuncios_video": [
             {
-                "hora_inicio": "17:07:00",
+                "hora_inicio": "15:07:00",
                 "archivo": "dGjbt4grjLU",
                 "duracion": 60
             },
@@ -157,7 +157,7 @@
         "pausas_activas": {
             "pausa_1": [
                 {
-                    "hora_inicio": "15:22:00",
+                    "hora_inicio": "15:10:00",
                     "archivo": "WfdH9x3C0lg",
                     "duracion": 600
                 },
@@ -669,6 +669,7 @@
         }
     }
 }
+
 
 
 
