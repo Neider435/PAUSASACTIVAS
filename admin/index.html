@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Pausas Activas Inlotrans</title>
+  
+  <!-- Decap CMS -->
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  
   <style>
     * {
       margin: 0;
@@ -16,9 +19,14 @@
       background: linear-gradient(135deg, #0a192f 0%, #112240 100%);
       color: #64ffda;
       min-height: 100vh;
+    }
+    
+    /* --- PANTALLA DE LOGIN --- */
+    #login-section {
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100vh;
     }
     .login-container {
       background: #112240;
@@ -98,46 +106,62 @@
       font-size: 0.85em;
       color: #8892b0;
     }
-    #cms-wrapper {
+    
+    /* --- CONTENEDOR DEL CMS (OCULTO POR DEFECTO) --- */
+    #cms-section {
       display: none;
       width: 100%;
-      height: 100vh;
+      min-height: 100vh;
+    }
+    
+    /* --- CLASE PARA MOSTRAR EL CMS --- */
+    #cms-section.active {
+      display: block;
     }
   </style>
 </head>
 <body>
-  <div id="login-section" class="login-container">
-    <div class="logo">🔐</div>
-    <h1>Panel de Administración</h1>
-    <p class="subtitle">Inlotrans - Pausas Activas</p>
-    
-    <form id="login-form">
-      <div class="form-group">
-        <label for="email">Correo Electrónico</label>
-        <input type="email" id="email" required placeholder="admin@inlotrans.com">
-      </div>
-      <div class="form-group">
-        <label for="password">Contraseña</label>
-        <input type="password" id="password" required placeholder="••••••••">
-      </div>
-      <button type="submit">Ingresar al Panel</button>
-      <p class="error" id="error-msg"></p>
-    </form>
+  <!-- SECCIÓN DE LOGIN -->
+  <div id="login-section">
+    <div class="login-container">
+      <div class="logo">🔐</div>
+      <h1>Panel de Administración</h1>
+      <p class="subtitle">Inlotrans - Pausas Activas</p>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Correo Electrónico</label>
+          <input type="email" id="email" required placeholder="admin@inlotrans.com">
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" required placeholder="••••••••">
+        </div>
+        <button type="submit">Ingresar al Panel</button>
+        <p class="error" id="error-msg"></p>
+      </form>
 
-    <div class="info">
-      <strong>📝 Nota:</strong> Usa las credenciales de Netlify Identity que recibiste por correo.
+      <div class="info">
+        <strong>📝 Nota:</strong> Usa las credenciales que configuraste.
+      </div>
     </div>
   </div>
 
-  <div id="cms-wrapper">
-    <!-- Decap CMS se cargará aquí automáticamente -->
+  <!-- SECCIÓN DEL CMS (Decap se montará aquí) -->
+  <div id="cms-section">
+    <!-- Decap CMS se inyectará automáticamente -->
   </div>
 
   <script>
-    // Configuración de credenciales (CAMBIA ESTO)
-    const VALID_EMAIL = 'neidex2003@gmail.com'; // ← CAMBIA POR TU EMAIL
-    const VALID_PASS = 'Inlo2024'; // ← CAMBIA POR TU CONTRASEÑA
+    // ============================================
+    // CONFIGURACIÓN DE CREDENCIALES
+    // ============================================
+    const VALID_EMAIL = 'admin@inlotrans.com'; // ← CAMBIA POR TU EMAIL
+    const VALID_PASS = 'Inlo2024!'; // ← CAMBIA POR TU CONTRASEÑA
 
+    // ============================================
+    // MANEJO DEL LOGIN
+    // ============================================
     document.getElementById('login-form').addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -151,33 +175,51 @@
         localStorage.setItem('cms_admin_email', email);
         
         // Mostrar CMS
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('cms-wrapper').style.display = 'block';
-        
-        // Inicializar Decap CMS
-        initDecapCMS();
+        showCMS();
       } else {
         errorMsg.textContent = '❌ Credenciales inválidas. Intente nuevamente.';
       }
     });
 
-    function initDecapCMS() {
-      // Decap CMS ya está cargado por el script
-      // Solo necesitamos esperar a que se inicialice
-      setTimeout(() => {
-        console.log('Decap CMS inicializado');
-      }, 1000);
+    // ============================================
+    // MOSTRAR EL CMS
+    // ============================================
+    function showCMS() {
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('cms-section').classList.add('active');
+      
+      // Inicializar Decap CMS
+      initDecapCMS();
     }
 
-    // Verificar si ya está logueado
+    // ============================================
+    // INICIALIZAR DECAP CMS
+    // ============================================
+    function initDecapCMS() {
+      // Decap CMS se inicializa automáticamente al cargar el script
+      // Solo necesitamos esperar a que el DOM esté listo
+      console.log('✅ Decap CMS inicializado');
+    }
+
+    // ============================================
+    // VERIFICAR SI YA ESTÁ LOGUEADO AL CARGAR
+    // ============================================
     window.addEventListener('load', function() {
       if (localStorage.getItem('cms_admin_logged') === 'true') {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('cms-wrapper').style.display = 'block';
-        initDecapCMS();
+        showCMS();
+      }
+    });
+
+    // ============================================
+    // CERRAR SESIÓN (Ctrl+Shift+L)
+    // ============================================
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        localStorage.removeItem('cms_admin_logged');
+        localStorage.removeItem('cms_admin_email');
+        window.location.reload();
       }
     });
   </script>
 </body>
-
 </html>
