@@ -584,9 +584,8 @@
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Fecha (MM-DD) *</strong></label>
-                        <input type="text" name="fecha" value="${data?.fecha || ''}" placeholder="11-28" 
-                            pattern="^\d{2}-\d{2}$" 
-                            title="Formato: MM-DD (ej: 11-28 para 28 de Noviembre)"
+                        <input type="text" id="fechaInput" name="fecha" value="${data?.fecha || ''}" placeholder="11-28" 
+                            title="Formato: MM-DD (ej: 11-28)"
                             required
                             style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                         <small style="color: #666;">Ejemplo: 11-28 para 28 de Noviembre</small>
@@ -671,6 +670,14 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             const tipo = form.dataset.tipo;
+
+            if (tipo === 'cumpleanos') {
+                const fechaRegex = /^\d{2}-\d{2}$/;
+                if (!fechaRegex.test(data.fecha)) {
+                    alert('❌ Formato de fecha inválido. Usa MM-DD (ej: 11-28)');
+                    return;
+                }
+            }
             
             if (tipo === 'cumpleanos') {
                 if (currentEdit?.index !== undefined) {
