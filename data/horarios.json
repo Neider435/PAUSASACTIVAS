@@ -220,6 +220,10 @@
       {
         "hora_inicio": "04:00:00",
         "duracion_por_persona": 60
+      },
+      {
+        "hora_inicio": "21:10:00",
+        "duracion_por_persona": 60
       }
     ],
     "anuncios_video": [
