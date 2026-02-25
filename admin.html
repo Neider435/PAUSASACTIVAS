@@ -194,15 +194,32 @@
         
         <!-- TAB CUMPLEAÑOS -->
         <div id="cumpleanos" class="tab-content active">
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <button class="btn btn-success" onclick="openModal('cumpleanos')">+ Agregar Cumpleaños</button>
-                <input type="text" class="search-box" id="searchCumple" placeholder="🔍 Buscar por nombre..." onkeyup="filterCumpleanos()">
+                <input type="text" class="search-box" id="searchCumple" placeholder="🔍 Buscar por nombre..." 
+                       style="flex: 1; min-width: 200px;" onkeyup="filterCumpleanos()">
+                <select id="filterMes" onchange="filterCumpleanos()" 
+                        style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-width: 150px;">
+                    <option value="">📅 Todos los meses</option>
+                    <option value="01">Enero</option>
+                    <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
             </div>
             <table>
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Fecha (MM-DD)</th>
+                        <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -269,6 +286,7 @@
         let isSaving = false;
         
         const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         
         // ============================================
         // API GITHUB VIA NETLIFY FUNCTION
@@ -398,10 +416,13 @@
             }
             
             cumpleanosData.forEach((persona, index) => {
+                const [mes, dia] = persona.fecha.split('-');
+                const fechaFormateada = `${parseInt(dia)} de ${MESES[parseInt(mes) - 1]} <small style="color: #666;">(${persona.fecha})</small>`;
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${persona.nombre}</td>
-                    <td>${persona.fecha}</td>
+                    <td>${fechaFormateada}</td>
                     <td class="action-buttons">
                         <button class="btn btn-warning" onclick="editCumpleanos(${index})">✏️ Editar</button>
                         <button class="btn btn-danger" onclick="deleteCumpleanos(${index})">🗑️ Eliminar</button>
@@ -413,10 +434,24 @@
         
         function filterCumpleanos() {
             const search = document.getElementById('searchCumple').value.toLowerCase();
+            const filterMes = document.getElementById('filterMes').value;
             const rows = document.querySelectorAll('#cumpleanosTable tr');
+            
             rows.forEach(row => {
                 const nombre = row.cells[0]?.textContent.toLowerCase() || '';
-                row.style.display = nombre.includes(search) ? '' : 'none';
+                const fecha = row.cells[1]?.textContent || '';
+                
+                // Extraer mes de la fecha (formato MM-DD)
+                const mes = fecha.split('-')[0];
+                
+                // Filtrar por nombre
+                const matchNombre = nombre.includes(search);
+                
+                // Filtrar por mes (si está seleccionado)
+                const matchMes = !filterMes || mes === filterMes;
+                
+                // Mostrar si cumple ambos filtros
+                row.style.display = (matchNombre && matchMes) ? '' : 'none';
             });
         }
         
@@ -576,6 +611,16 @@
             
             if (tipo === 'cumpleanos') {
                 title.textContent = data ? '✏️ Editar Cumpleaños' : '➕ Agregar Cumpleaños';
+                
+                // Extraer mes y día si existe data
+                let mesValue = '';
+                let diaValue = '';
+                if (data?.fecha) {
+                    const [mes, dia] = data.fecha.split('-');
+                    mesValue = mes;
+                    diaValue = dia;
+                }
+                
                 fields.innerHTML = `
                     <div style="margin-bottom: 15px;">
                         <label><strong>Nombre Completo *</strong></label>
@@ -583,12 +628,36 @@
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label><strong>Fecha (MM-DD) *</strong></label>
-                        <input type="text" id="fechaInput" name="fecha" value="${data?.fecha || ''}" placeholder="11-28" 
-                            title="Formato: MM-DD (ej: 11-28)"
-                            required
-                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                        <small style="color: #666;">Ejemplo: 11-28 para 28 de Noviembre</small>
+                        <label><strong>Fecha de Cumpleaños *</strong></label>
+                        <div style="display: flex; gap: 10px; margin-top: 5px;">
+                            <div style="flex: 1;">
+                                <select name="mes" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="">Mes</option>
+                                    <option value="01" ${mesValue === '01' ? 'selected' : ''}>Enero</option>
+                                    <option value="02" ${mesValue === '02' ? 'selected' : ''}>Febrero</option>
+                                    <option value="03" ${mesValue === '03' ? 'selected' : ''}>Marzo</option>
+                                    <option value="04" ${mesValue === '04' ? 'selected' : ''}>Abril</option>
+                                    <option value="05" ${mesValue === '05' ? 'selected' : ''}>Mayo</option>
+                                    <option value="06" ${mesValue === '06' ? 'selected' : ''}>Junio</option>
+                                    <option value="07" ${mesValue === '07' ? 'selected' : ''}>Julio</option>
+                                    <option value="08" ${mesValue === '08' ? 'selected' : ''}>Agosto</option>
+                                    <option value="09" ${mesValue === '09' ? 'selected' : ''}>Septiembre</option>
+                                    <option value="10" ${mesValue === '10' ? 'selected' : ''}>Octubre</option>
+                                    <option value="11" ${mesValue === '11' ? 'selected' : ''}>Noviembre</option>
+                                    <option value="12" ${mesValue === '12' ? 'selected' : ''}>Diciembre</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <select name="dia" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="">Día</option>
+                                    ${Array.from({length: 31}, (_, i) => {
+                                        const diaNum = String(i + 1).padStart(2, '0');
+                                        return `<option value="${diaNum}" ${diaValue === diaNum ? 'selected' : ''}>${i + 1}</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 5px;">Ejemplo: 28 de Noviembre</small>
                     </div>
                 `;
             } else if (tipo === 'horarioCumple') {
@@ -670,16 +739,15 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             const tipo = form.dataset.tipo;
-
-            if (tipo === 'cumpleanos') {
-                const fechaRegex = /^\d{2}-\d{2}$/;
-                if (!fechaRegex.test(data.fecha)) {
-                    alert('❌ Formato de fecha inválido. Usa MM-DD (ej: 11-28)');
-                    return;
-                }
-            }
             
             if (tipo === 'cumpleanos') {
+                // Combinar mes y día en formato MM-DD
+                const mes = formData.get('mes');
+                const dia = formData.get('dia');
+                data.fecha = `${mes}-${dia}`;
+                delete data.mes;
+                delete data.dia;
+                
                 if (currentEdit?.index !== undefined) {
                     cumpleanosData[currentEdit.index] = data;
                 } else {
