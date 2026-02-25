@@ -437,18 +437,21 @@
             const filterMes = document.getElementById('filterMes').value;
             const rows = document.querySelectorAll('#cumpleanosTable tr');
             
-            rows.forEach(row => {
+            rows.forEach((row, index) => {
                 const nombre = row.cells[0]?.textContent.toLowerCase() || '';
-                const fecha = row.cells[1]?.textContent || '';
                 
-                // Extraer mes de la fecha (formato MM-DD)
-                const mes = fecha.split('-')[0];
+                // ✅ Usar el dato original del array en lugar del texto formateado
+                const persona = cumpleanosData[index];
+                let matchMes = true;
+                
+                if (persona && filterMes) {
+                    // Extraer mes del formato original "MM-DD"
+                    const mes = persona.fecha ? persona.fecha.split('-')[0] : '';
+                    matchMes = mes === filterMes;
+                }
                 
                 // Filtrar por nombre
                 const matchNombre = nombre.includes(search);
-                
-                // Filtrar por mes (si está seleccionado)
-                const matchMes = !filterMes || mes === filterMes;
                 
                 // Mostrar si cumple ambos filtros
                 row.style.display = (matchNombre && matchMes) ? '' : 'none';
@@ -836,3 +839,4 @@
     </script>
 </body>
 </html>
+
