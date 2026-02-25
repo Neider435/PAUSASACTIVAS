@@ -5,13 +5,14 @@ let playedFiles = new Set();
 let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
-let userInteracted = false; // <<< BANDERA CLAVE
+let userInteracted = false;
 
-// Detectar si estamos en una TV o dispositivo móvil
+// NUEVO: Registro para bloquear contenidos mientras se reproducen
+let contentLocks = {}; 
+
 const isMobileOrTV = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|SmartTV|TV|Xbox|PlayStation|Nintendo|Apple TV|Samsung TV/i.test(navigator.userAgent);
 console.log(`Dispositivo detectado: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'}`);
 
-// Esta función es llamada automáticamente por la API de YouTube
 function onYouTubeIframeAPIReady() {
   console.log("API de YouTube lista.");
   isYoutubeApiLoaded = true;
@@ -66,346 +67,213 @@ function clearAll() {
 }
 
 function showOverlay(contentId, callback, duracion) {
+  // Doble verificación de seguridad
   if (activeFile === contentId) return;
+  
   clearAll();
   
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
   
   activeFile = contentId;
+  
+  // MARCAR como reproducido INMEDIATAMENTE para evitar duplicados en los próximos 15s
   playedFiles.add(contentId);
+  
+  // Crear bloqueo temporal
+  const lockTime = Date.now() + (duracion * 1000) + 2000; // Duración + 2s margen
+  contentLocks[contentId] = lockTime;
   
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
   
   callback();
   
+  // Solo usamos el timeout externo como respaldo de seguridad, no como principal
   if (duracion) {
     currentOverlayTimeout = setTimeout(() => {
-      console.log(`Duración de ${contentId} terminada. Cerrando overlay.`);
-      clearAll();
-    }, duracion * 1000);
+      // Solo limpiar si el player no ha reportado que terminó ya
+      if (activeFile === contentId) {
+        console.log(`[Respaldo] Duración de ${contentId} terminada. Cerrando.`);
+        clearAll();
+      }
+    }, (duracion * 1000) + 5000); // Margen extra de 5s por si el player falla
   }
 }
 
 function showBirthdayMessage(nombre, duracion) {
-  showOverlay(
-    `cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`, 
-    () => {
-      const dynamicContent = document.getElementById("dynamic-content");
-      const birthdayText = document.getElementById("birthday-text");
-      
-      dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
-      dynamicContent.style.display = 'block';
-      
-      birthdayText.innerHTML = `${nombre}`;
-      birthdayText.style.display = 'block';
-    }, 
-    duracion
-  );
+  const contentId = `cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`;
+  showOverlay(contentId, () => {
+    const dynamicContent = document.getElementById("dynamic-content");
+    const birthdayText = document.getElementById("birthday-text");
+    
+    dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
+    dynamicContent.style.display = 'block';
+    
+    birthdayText.innerHTML = `${nombre}`;
+    birthdayText.style.display = 'block';
+  }, duracion);
 }
 
-// ============================================
-// FUNCIÓN CORREGIDA: playYoutubeVideo() - Funciona en TV y Celular
-// ============================================
 async function playYoutubeVideo(videoId, duracion) {
-  // En móviles y TV, SIEMPRE MUTEADO para que funcione el autoplay
   const muted = isMobileOrTV ? true : !userInteracted;
-  console.log(`📱 Dispositivo: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'} | Muted: ${muted}`);
+  const contentId = `youtube_${videoId}`;
   
-  showOverlay(
-    `youtube_${videoId}`, 
-    async () => {
-      const dynamicContent = document.getElementById("dynamic-content");
-      
-      // Asegurar que el contenedor del video esté visible
-      dynamicContent.innerHTML = `<div id="youtube-player" style="width: 100%; height: 100%; position: relative;"></div>`;
-      dynamicContent.style.display = 'flex';
-      document.getElementById('audio-button').style.display = 'none';
-      
-      try {
-        // Intentar usar la API de YouTube
-        await loadYoutubeApi();
-        
-        // Añadir parámetro 'origin' para evitar errores CORS
-        player = new YT.Player('youtube-player', {
-          host: 'https://www.youtube-nocookie.com',
-          height: '100%',
-          width: '100%',
-          videoId: videoId,
-          playerVars: {
-            'autoplay': 1,
-            'playsinline': 1, // Crucial para móviles
-            'controls': 0,
-            'modestbranding': 1,
-            'mute': muted ? 1 : 0,
-            'rel': 0,
-            'showinfo': 0,
-            'iv_load_policy': 3,
-            'origin': window.location.origin // Dinámico para cualquier dominio
-          },
-          events: {
-            'onReady': (event) => {
-              console.log("✅ Video YouTube listo para reproducir");
-              event.target.playVideo();
-              if (!muted) {
-                event.target.setVolume(100);
-                event.target.unMute();
-              }
-            },
-            'onStateChange': (event) => {
-              console.log("Estado del video YouTube:", event.data);
-              if (event.data === YT.PlayerState.ENDED) {
-                console.log("Video YouTube terminado");
-                clearAll();
-              }
-            },
-            'onError': (event) => {
-              console.error("❌ Error en YouTube Player:", event.data);
-              
-              // ✅ FALLBACK: Si hay error, usar iframe directo
-              console.log("🔄 Intentando fallback con iframe...");
-              dynamicContent.innerHTML = `
-                <iframe 
-                  width="100%" 
-                  height="100%" 
-                  src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
-                  frameborder="0" 
-                  allow="autoplay; encrypted-media; fullscreen" 
-                  allowfullscreen
-                  style="border: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                </iframe>
-              `;
-              dynamicContent.style.display = 'flex';
-            }
-          }
-        });
-        
-      } catch (error) {
-        console.error("❌ Error al cargar la API de YouTube:", error);
-        
-        // ✅ FALLBACK: Si la API falla, usar iframe directo
-        console.log("🔄 Usando iframe directo como fallback...");
-        dynamicContent.innerHTML = `
-          <iframe 
-            width="100%" 
-            height="100%" 
-            src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1" 
-            frameborder="0" 
-            allow="autoplay; encrypted-media; fullscreen" 
-            allowfullscreen
-            style="border: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-          </iframe>
-        `;
-        dynamicContent.style.display = 'flex';
-        
-        // Configurar timeout para cerrar el overlay
-        if (duracion) {
-          currentOverlayTimeout = setTimeout(() => {
-            console.log(`Duración terminada. Cerrando overlay.`);
-            clearAll();
-          }, duracion * 1000);
-        }
-      }
-    }, 
-    duracion
-  );
-}
-
-// ============================================
-// FUNCIÓN COMPLETA: checkEstado() - Maneja TODO
-// ============================================
-async function checkEstado() {
-  if (document.getElementById('init-overlay').style.display === 'flex') {
-    console.log("Esperando interacción de inicio...");
+  // Verificar bloqueo antes de iniciar
+  if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
+    console.log(`🔒 Contenido bloqueado activamente: ${contentId}`);
     return;
   }
 
-  try {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("Verificando estado desde archivos JSON...");
+  console.log(`📱 Dispositivo: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'} | Muted: ${muted}`);
+  
+  showOverlay(contentId, async () => {
+    const dynamicContent = document.getElementById("dynamic-content");
+    dynamicContent.innerHTML = `<div id="youtube-player" style="width: 100%; height: 100%; position: relative;"></div>`;
+    dynamicContent.style.display = 'flex';
+    document.getElementById('audio-button').style.display = 'none';
     
+    try {
+      await loadYoutubeApi();
+      
+      player = new YT.Player('youtube-player', {
+        host: 'https://www.youtube-nocookie.com',
+        height: '100%',
+        width: '100%',
+        videoId: videoId,
+        playerVars: {
+          'autoplay': 1,
+          'playsinline': 1,
+          'controls': 0,
+          'modestbranding': 1,
+          'mute': muted ? 1 : 0,
+          'rel': 0,
+          'showinfo': 0,
+          'iv_load_policy': 3,
+          'origin': window.location.origin
+        },
+        events: {
+          'onReady': (event) => {
+            console.log("✅ Video YouTube listo");
+            event.target.playVideo();
+            if (!muted) {
+              event.target.setVolume(100);
+              event.target.unMute();
+            }
+          },
+          'onStateChange': (event) => {
+            console.log("Estado del video:", event.data);
+            if (event.data === YT.PlayerState.ENDED) {
+              console.log("✅ Video terminado naturalmente");
+              // Limpiar bloqueo explícitamente
+              delete contentLocks[contentId];
+              clearAll();
+            }
+          },
+          'onError': (event) => {
+            console.error("❌ Error YouTube:", event.data);
+            delete contentLocks[contentId];
+            clearAll();
+          }
+        }
+      });
+    } catch (error) {
+      console.error("❌ Error API YouTube:", error);
+      delete contentLocks[contentId];
+      clearAll();
+    }
+  }, duracion);
+}
+
+async function checkEstado() {
+  if (document.getElementById('init-overlay').style.display === 'flex') return;
+
+  try {
     const [cumpleResponse, horarioResponse] = await Promise.all([
       fetch("/data/cumpleanos.json"),
       fetch("/data/horarios.json")
     ]);
 
-    if (!cumpleResponse.ok || !horarioResponse.ok) {
-      throw new Error(`Error al cargar JSONs: cumple=${cumpleResponse.status}, horarios=${horarioResponse.status}`);
-    }
+    if (!cumpleResponse.ok || !horarioResponse.ok) throw new Error("Error cargando JSONs");
 
     const cumpleanosData = await cumpleResponse.json();
     const horariosData = await horarioResponse.json();
-
     const cumpleanosArray = Array.isArray(cumpleanosData) ? cumpleanosData : [cumpleanosData];
     
-    // Obtener el día de la semana actual (0 = Domingo, 1 = Lunes, ..., 6 = Sábado)
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0-6
-    const todayKey = dayOfWeek.toString();
+    const dayOfWeek = now.getDay();
+    const todayConfig = horariosData[dayOfWeek.toString()] || horariosData["0"];
     
-    console.log(`Día de la semana: ${dayOfWeek} (Clave: "${todayKey}")`);
+    if (!todayConfig) return;
 
-    // Obtener la configuración para el día actual
-    const todayConfig = horariosData[todayKey] || horariosData["0"];
-    
-    if (!todayConfig) {
-      console.error(`No se encontró configuración para el día ${todayKey}`);
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      return;
-    }
-
-    // Extraer los diferentes tipos de contenido
     const cumpleanosHorarios = todayConfig.cumpleanos || [];
     const anunciosVideo = todayConfig.anuncios_video || [];
     const pausasActivas = todayConfig.pausas_activas || {};
-    
-    console.log("Configuración del día:");
-    console.log(`  - Cumpleaños: ${cumpleanosHorarios.length} horarios`);
-    console.log(`  - Anuncios: ${anunciosVideo.length} videos`);
-    console.log(`  - Pausas activas: ${Object.keys(pausasActivas).length} grupos`);
 
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTime = currentHour * 60 + currentMinute;
-    
-    console.log(`Hora actual: ${currentHour}:${currentMinute.toString().padStart(2, '0')} (${currentTime} minutos desde medianoche)`);
-    console.log(`Fecha actual: ${today.toDateString()}`);
 
     let activeContent = null;
 
-    // ============================================
-    // 1. Verificar si hay cumpleaños HOY
-    // ============================================
+    // 1. Cumpleaños
     let birthdayPerson = null;
     for (const persona of cumpleanosArray) {
       const [mesStr, diaStr] = persona.fecha.split('-');
-      const mes = parseInt(mesStr, 10);
-      const dia = parseInt(diaStr, 10);
-      
-      const birthDate = new Date(now.getFullYear(), mes - 1, dia);
-      
-      if (birthDate.toDateString() === today.toDateString()) {
+      const birthDate = new Date(now.getFullYear(), parseInt(mesStr) - 1, parseInt(diaStr));
+      if (birthDate.toDateString() === now.toDateString()) {
         birthdayPerson = persona;
-        console.log(`✓ CUMPLEAÑOS HOY: ${persona.nombre}`);
         break;
       }
     }
 
-    // Si hay cumpleaños, verificar horarios
     if (birthdayPerson) {
-      console.log(`Verificando horarios de cumpleaños...`);
-      
       for (const horario of cumpleanosHorarios) {
-        const timeParts = horario.hora_inicio.split(':').map(Number);
-        const horaStr = timeParts[0];
-        const minutoStr = timeParts[1] || 0;
+        const [h, m] = horario.hora_inicio.split(':').map(Number);
+        const start = h * 60 + m;
+        const end = start + ((horario.duracion_por_persona || 60) / 60);
         
-        const startTime = horaStr * 60 + minutoStr;
-        const duracionMinutos = (horario.duracion_por_persona || 60) / 60;
-        const endTime = startTime + duracionMinutos;
-        
-        console.log(`  Horario: ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${horario.duracion_por_persona || 60} seg`);
-        console.log(`  Rango: ${startTime} - ${endTime} minutos`);
-        
-        if (currentTime >= startTime && currentTime <= endTime) {
-          activeContent = {
-            activo: true,
-            tipo: "cumpleanos",
-            nombre: birthdayPerson.nombre,
-            duracion: horario.duracion_por_persona || 60
-          };
-          console.log(`  ✓ ESTAMOS EN HORARIO DE CUMPLEAÑOS!`);
+        if (currentTime >= start && currentTime <= end) {
+          activeContent = { tipo: "cumpleanos", nombre: birthdayPerson.nombre, duracion: horario.duracion_por_persona || 60 };
           break;
         }
       }
     }
 
-    // ============================================
-    // 2. Verificar anuncios de video (si no hay cumpleaños activo)
-    // ============================================
+    // 2. Anuncios
     if (!activeContent) {
-      console.log(`Verificando anuncios de video...`);
-      
       for (const anuncio of anunciosVideo) {
-        const timeParts = anuncio.hora_inicio.split(':').map(Number);
-        const horaStr = timeParts[0];
-        const minutoStr = timeParts[1] || 0;
+        const [h, m] = anuncio.hora_inicio.split(':').map(Number);
+        const start = h * 60 + m;
+        const end = start + ((anuncio.duracion || 60) / 60);
         
-        const startTime = horaStr * 60 + minutoStr;
-        const duracionMinutos = (anuncio.duracion || 60) / 60;
-        const endTime = startTime + duracionMinutos;
-        
-        console.log(`  Anuncio: ${anuncio.archivo} - ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${anuncio.duracion || 60} seg`);
-        console.log(`  Rango: ${startTime} - ${endTime} minutos`);
-        
-        if (currentTime >= startTime && currentTime <= endTime) {
-          activeContent = {
-            activo: true,
-            tipo: "anuncio_video",
-            archivo: anuncio.archivo,
-            duracion: anuncio.duracion || 60
-          };
-          console.log(`  ✓ ESTAMOS EN HORARIO DE ANUNCIO!`);
+        if (currentTime >= start && currentTime <= end) {
+          activeContent = { tipo: "anuncio_video", archivo: anuncio.archivo, duracion: anuncio.duracion || 60 };
           break;
         }
       }
     }
 
-    // ============================================
-    // 3. Verificar pausas activas (si no hay nada activo)
-    // ============================================
+    // 3. Pausas
     if (!activeContent) {
-      console.log(`Verificando pausas activas...`);
-      
-      // Iterar sobre todos los grupos de pausas (pausa_1, pausa_2, etc.)
-      for (const pausaGroup of Object.values(pausasActivas)) {
-        const pausas = Array.isArray(pausaGroup) ? pausaGroup : [pausaGroup];
-        
+      for (const grupo of Object.values(pausasActivas)) {
+        const pausas = Array.isArray(grupo) ? grupo : [grupo];
         for (const pausa of pausas) {
-          const timeParts = pausa.hora_inicio.split(':').map(Number);
-          const horaStr = timeParts[0];
-          const minutoStr = timeParts[1] || 0;
+          const [h, m] = pausa.hora_inicio.split(':').map(Number);
+          const start = h * 60 + m;
+          const end = start + ((pausa.duracion || 600) / 60);
           
-          const startTime = horaStr * 60 + minutoStr;
-          const duracionMinutos = (pausa.duracion || 600) / 60;
-          const endTime = startTime + duracionMinutos;
-          
-          console.log(`  Pausa: ${pausa.archivo} - ${horaStr}:${minutoStr.toString().padStart(2, '0')} - Duración: ${pausa.duracion || 600} seg`);
-          console.log(`  Rango: ${startTime} - ${endTime} minutos`);
-          
-          if (currentTime >= startTime && currentTime <= endTime) {
-            activeContent = {
-              activo: true,
-              tipo: "pausas_activas",
-              archivo: pausa.archivo,
-              duracion: pausa.duracion || 600
-            };
-            console.log(`  ✓ ESTAMOS EN HORARIO DE PAUSA ACTIVA!`);
+          if (currentTime >= start && currentTime <= end) {
+            activeContent = { tipo: "pausas_activas", archivo: pausa.archivo, duracion: pausa.duracion || 600 };
             break;
           }
         }
-        
-        if (activeContent) break; // Salir si ya encontramos algo
+        if (activeContent) break;
       }
     }
 
-    // ============================================
-    // 4. Si no hay contenido activo
-    // ============================================
-    if (!activeContent) {
-      console.log("✗ No hay contenido activo en este momento");
-      activeContent = { activo: false };
-    }
-
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-    // --- Lógica de visualización ---
-    const overlay = document.getElementById("overlay");
-    const isOverlayVisible = overlay.style.display !== "none";
-
-    if (activeContent.activo) {
+    // LÓGICA DE VISUALIZACIÓN CORREGIDA
+    if (activeContent) {
       let contentId;
       if (activeContent.tipo === "cumpleanos") {
         contentId = `cumpleanos_${activeContent.nombre}_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
@@ -413,46 +281,48 @@ async function checkEstado() {
         contentId = `${activeContent.tipo}_${activeContent.archivo}`;
       }
 
+      // VERIFICACIÓN DE BLOQUEO POR TIEMPO
+      if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
+        console.log(`⏳ Esperando... ${contentId} aún está en periodo de bloqueo.`);
+        return; // SALIR SIN HACER NADA
+      }
+
+      // Verificar si ya se reprodujo HOY (solo si no hay bloqueo activo)
       if (!playedFiles.has(contentId)) {
-        console.log(`🎯 MOSTRANDO: ${activeContent.tipo} - ${activeContent.nombre || activeContent.archivo} (${activeContent.duracion} seg)`);
+        console.log(`🎯 REPRODUCIENDO: ${contentId}`);
         if (activeContent.tipo === "cumpleanos") {
           showBirthdayMessage(activeContent.nombre, activeContent.duracion);
-        } else if (activeContent.tipo === "anuncio_video" || activeContent.tipo === "pausas_activas") {
-          if (activeContent.archivo && /^[a-zA-Z0-9_-]{11}$/.test(activeContent.archivo)) {
-            playYoutubeVideo(activeContent.archivo, activeContent.duracion);
-          } else {
-            console.error("ID de YouTube inválido:", activeContent.archivo);
-            clearAll();
-          }
+        } else if (activeContent.archivo && /^[a-zA-Z0-9_-]{11}$/.test(activeContent.archivo)) {
+          playYoutubeVideo(activeContent.archivo, activeContent.duracion);
         }
       } else {
-        console.log(`⏭️  Ya se mostró este contenido hoy: ${contentId}`);
+        console.log(`⏭️ Ya reproducido hoy: ${contentId}`);
       }
     } else {
-      if (isOverlayVisible) {
-        console.log("Cerrando overlay - no hay contenido activo.");
+      // Si no hay contenido activo en este instante, limpiamos locks antiguos
+      const nowTime = Date.now();
+      for (const key in contentLocks) {
+        if (contentLocks[key] < nowTime) {
+          delete contentLocks[key];
+        }
+      }
+      
+      const overlay = document.getElementById("overlay");
+      if (overlay.style.display !== "none") {
         clearAll();
       }
-      playedFiles.clear();
+      // Opcional: Limpiar playedFiles a medianoche o dejarlo así por día
+      if (now.getHours() === 0 && now.getMinutes() < 2) {
+        playedFiles.clear();
+      }
     }
 
   } catch (error) {
-    console.error("Error al verificar estado:", error);
-    clearAll();
-    const mainIframe = document.getElementById("main-iframe");
-    mainIframe.style.display = "block";
-    const dynamicContent = document.getElementById("dynamic-content");
-    dynamicContent.innerHTML = `<div style="color:red; text-align:center;">Error al cargar configuración.</div>`;
-    dynamicContent.style.display = 'block';
-    document.getElementById("overlay").style.display = "flex";
-    setTimeout(() => {
-      document.getElementById("overlay").style.display = "none";
-    }, 5000);
+    console.error("Error checkEstado:", error);
   }
 }
 
 function initializeApplication() {
-  console.log("Página cargada. Iniciando aplicación...");
   if (!userInteracted) {
     document.getElementById('init-overlay').style.display = 'flex';
     document.getElementById('main-iframe').style.display = 'none';
@@ -466,10 +336,8 @@ function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
   document.getElementById('main-iframe').style.display = 'block';
-  console.log("Interacción de usuario registrada. Habilitando sonido.");
   checkEstado();
   checkingInterval = setInterval(checkEstado, 15000);
 }
 
 window.addEventListener('load', initializeApplication);
-
