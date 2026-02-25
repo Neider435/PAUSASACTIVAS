@@ -1,0 +1,12 @@
+{
+  "name": "pausas-activas-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for GitHub API",
+  "main": "github-proxy.js",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
