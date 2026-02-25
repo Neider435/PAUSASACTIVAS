@@ -584,10 +584,12 @@
                     </div>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Fecha (MM-DD) *</strong></label>
-                        <input type="text" name="fecha" value="${data?.fecha || ''}" placeholder="02-25" 
-                               pattern="\d{2}-\d{2}" required
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                        <small style="color: #666;">Ejemplo: 02-25 para 25 de Febrero</small>
+                        <input type="text" name="fecha" value="${data?.fecha || ''}" placeholder="11-28" 
+                            pattern="^\d{2}-\d{2}$" 
+                            title="Formato: MM-DD (ej: 11-28 para 28 de Noviembre)"
+                            required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                        <small style="color: #666;">Ejemplo: 11-28 para 28 de Noviembre</small>
                     </div>
                 `;
             } else if (tipo === 'horarioCumple') {
