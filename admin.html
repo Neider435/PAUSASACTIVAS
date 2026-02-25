@@ -415,7 +415,22 @@
                 return;
             }
             
-            cumpleanosData.forEach((persona, index) => {
+            // ✅ CREAR COPIA ORDENADA (sin modificar el original)
+            const cumpleanosOrdenados = [...cumpleanosData].sort((a, b) => {
+                const [mesA, diaA] = a.fecha.split('-').map(Number);
+                const [mesB, diaB] = b.fecha.split('-').map(Number);
+                
+                // Primero ordenar por mes, luego por día
+                if (mesA !== mesB) return mesA - mesB;
+                return diaA - diaB;
+            });
+            
+            cumpleanosOrdenados.forEach((persona, index) => {
+                // ✅ Encontrar el índice original para editar/eliminar correctamente
+                const originalIndex = cumpleanosData.findIndex(p => 
+                    p.nombre === persona.nombre && p.fecha === persona.fecha
+                );
+                
                 const [mes, dia] = persona.fecha.split('-');
                 const fechaFormateada = `${parseInt(dia)} de ${MESES[parseInt(mes) - 1]} <small style="color: #666;">(${persona.fecha})</small>`;
                 
@@ -424,8 +439,8 @@
                     <td>${persona.nombre}</td>
                     <td>${fechaFormateada}</td>
                     <td class="action-buttons">
-                        <button class="btn btn-warning" onclick="editCumpleanos(${index})">✏️ Editar</button>
-                        <button class="btn btn-danger" onclick="deleteCumpleanos(${index})">🗑️ Eliminar</button>
+                        <button class="btn btn-warning" onclick="editCumpleanos(${originalIndex})">✏️ Editar</button>
+                        <button class="btn btn-danger" onclick="deleteCumpleanos(${originalIndex})">🗑️ Eliminar</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -839,4 +854,5 @@
     </script>
 </body>
 </html>
+
 
