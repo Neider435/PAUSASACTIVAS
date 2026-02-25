@@ -1,12 +1,12 @@
 const fetch = require('node-fetch');
 
-// Configuración desde variables de entorno
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_USERNAME = process.env.GITHUB_USERNAME || 'Neider435';
 const GITHUB_REPO = process.env.GITHUB_REPO || 'PAUSASACTIVAS';
 
 exports.handler = async (event, context) => {
-  // Solo permitir método POST
+  console.log('🔔 Function called:', event.httpMethod, event.path);
+  
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -17,7 +17,8 @@ exports.handler = async (event, context) => {
   try {
     const { method, path, body } = JSON.parse(event.body);
     
-    // Validar parámetros
+    console.log('📥 Request:', method, path);
+    
     if (!method || !path) {
       return {
         statusCode: 400,
@@ -37,32 +38,29 @@ exports.handler = async (event, context) => {
     let response;
 
     if (method === 'GET') {
-      // Obtener archivo
+      console.log('🔍 Fetching:', url);
       response = await fetch(url, { headers });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ GitHub API error:', response.status, errorText);
         return {
           statusCode: response.status,
-          body: JSON.stringify({ error: await response.text() })
+          body: JSON.stringify({ error: errorText })
         };
       }
       
       const data = await response.json();
-      
-      // Decodificar contenido base64
       const content = JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8'));
       
+      console.log('✅ Success');
       return {
         statusCode: 200,
-        body: JSON.stringify({ 
-          content,
-          sha: data.sha 
-        })
+        body: JSON.stringify({ content, sha: data.sha })
       };
     }
     
     if (method === 'PUT') {
-      // Actualizar archivo
       const { content, sha, message } = body;
       
       if (!content || !sha) {
@@ -72,6 +70,7 @@ exports.handler = async (event, context) => {
         };
       }
 
+      console.log('✏️ Updating:', url);
       response = await fetch(url, {
         method: 'PUT',
         headers,
@@ -83,14 +82,16 @@ exports.handler = async (event, context) => {
       });
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ GitHub API error:', response.status, errorText);
         return {
           statusCode: response.status,
-          body: JSON.stringify({ error: await response.text() })
+          body: JSON.stringify({ error: errorText })
         };
       }
       
       const result = await response.json();
-      
+      console.log('✅ Success');
       return {
         statusCode: 200,
         body: JSON.stringify(result)
@@ -103,7 +104,7 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Error in github-proxy:', error);
+    console.error('❌ Error in function:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message })
