@@ -183,39 +183,34 @@
 </head>
 <body>
     <div class="logo-container">
-        <img src="prueba.png" alt="Logo de la Empresa">
+        <img src="prueba.png" alt="...">
     </div>
     <div class="container">
-        <h1>🎂 Panel de Administración - Pausas Activas Inlotrans</h1>
+        <h1>Panel de Administración - Pausas Activas Inlotrans</h1>
         <p class="subtitle">Gestiona cumpleaños y horarios directamente en GitHub</p>
         
         <!-- BARRA DE ESTADO -->
         <div class="status-bar connected" id="statusBar">
             <div>
-                <strong>📡 Estado:</strong> <span id="statusText">Conectado</span>
-                <span id="loadingIndicator" style="display: none;" class="loading"></span>
-            </div>
-            <div class="last-sync">Última sincronización: <span id="lastSync">--</span></div>
-            <div>
-                <a href="index.html" class="btn btn-info" target="_blank">👁️ Ver Pantalla Principal</a>
+                <a href="index.html" class="btn btn-info" target="_blank">Ver Pantalla Principal</a>
             </div>
         </div>
         
         <!-- TABS -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('cumpleanos')">🎂 Cumpleaños</button>
-            <button class="tab-btn" onclick="showTab('horarios')">📅 Horarios</button>
+            <button class="tab-btn active" onclick="showTab('cumpleanos')">Cumpleaños</button>
+            <button class="tab-btn" onclick="showTab('horarios')">Horarios</button>
         </div>
         
         <!-- TAB CUMPLEAÑOS -->
         <div id="cumpleanos" class="tab-content active">
             <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                <button class="btn btn-success" onclick="openModal('cumpleanos')">+ Agregar Cumpleaños</button>
+                <button class="btn btn-success" onclick="openModal('cumpleanos')">+ Agregar Cumpleañero</button>
                 <input type="text" class="search-box" id="searchCumple" placeholder="🔍 Buscar por nombre..." 
                        style="flex: 1; min-width: 200px;" onkeyup="filterCumpleanos()">
                 <select id="filterMes" onchange="filterCumpleanos()" 
                         style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-width: 150px;">
-                    <option value="">📅 Todos los meses</option>
+                    <option value="">Todos los meses</option>
                     <option value="01">Enero</option>
                     <option value="02">Febrero</option>
                     <option value="03">Marzo</option>
@@ -234,6 +229,7 @@
                 <thead>
                     <tr>
                         <th>Nombre</th>
+                        <th>Cedula</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
@@ -258,7 +254,7 @@
             </div>
             
             <div style="margin-bottom: 20px;">
-                <button class="btn btn-success" onclick="openModal('horarioCumple')">+ Agregar Cumpleaños</button>
+                <button class="btn btn-success" onclick="openModal('horarioCumple')">+ Agregar horario Cumpleaños</button>
                 <button class="btn btn-success" onclick="openModal('horarioAnuncio')">+ Agregar Anuncio</button>
                 <button class="btn btn-success" onclick="openModal('horarioPausa')">+ Agregar Pausa Activa</button>
             </div>
@@ -276,7 +272,7 @@
                 <div id="modalFields"></div>
                 <div style="margin-top: 20px; text-align: right;">
                     <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="saveBtn">💾 Guardar en GitHub</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Guardar</button>
                 </div>
             </form>
         </div>
@@ -511,15 +507,15 @@
             const container = document.getElementById('horariosContent');
             container.innerHTML = `
                 <div class="horario-group">
-                    <h3>🎂 Cumpleaños (${diaData.cumpleanos?.length || 0})</h3>
+                    <h3>Cumpleaños (${diaData.cumpleanos?.length || 0})</h3>
                     ${renderHorariosTable(diaData.cumpleanos || [], 'cumple')}
                 </div>
                 <div class="horario-group">
-                    <h3>📺 Anuncios Video (${diaData.anuncios_video?.length || 0})</h3>
+                    <h3>Anuncios Video (${diaData.anuncios_video?.length || 0})</h3>
                     ${renderHorariosTable(diaData.anuncios_video || [], 'anuncio')}
                 </div>
                 <div class="horario-group">
-                    <h3>🏃 Pausas Activas</h3>
+                    <h3>Pausas Activas</h3>
                     ${renderPausasTable(diaData.pausas_activas || {})}
                 </div>
             `;
@@ -661,6 +657,11 @@
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
                     <div style="margin-bottom: 15px;">
+                        <label><strong>Numero de Cedula *</strong></label>
+                        <input type="number" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" name="cedula" value=" " required 
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
                         <label><strong>Fecha de Cumpleaños *</strong></label>
                         <div style="display: flex; gap: 10px; margin-top: 5px;">
                             <div style="flex: 1;">
@@ -690,7 +691,6 @@
                                 </select>
                             </div>
                         </div>
-                        <small style="color: #666; display: block; margin-top: 5px;">Ejemplo: 28 de Noviembre</small>
                     </div>
                 `;
             } else if (tipo === 'horarioCumple') {
@@ -869,4 +869,3 @@
     </script>
 </body>
 </html>
-
