@@ -188,7 +188,7 @@
     <div class="container">
         <h1>Panel de Administración - Pausas Activas Inlotrans</h1>
         <br><br><br>
-        
+
         <div class="status-bar connected" id="statusBar">
              <div>
                 <strong>Estado:</strong> <span id="statusText">Conectado</span>
@@ -284,14 +284,9 @@
     <div id="notification" class="notification"></div>
     
     <script>
-        // ============================================
-        // CONFIGURACIÓN - API Endpoint
-        // ============================================
+
         const API_ENDPOINT = '/.netlify/functions/github-proxy';
-        
-        // ============================================
-        // VARIABLES GLOBALES
-        // ============================================
+
         let cumpleanosData = [];
         let horariosData = {};
         let currentEdit = null;
@@ -302,9 +297,6 @@
         const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         
-        // ============================================
-        // API GITHUB VIA NETLIFY FUNCTION
-        // ============================================
         async function callGitHubAPI(method, path, data = null) {
             const response = await fetch(API_ENDPOINT, {
                 method: 'POST',
@@ -360,12 +352,10 @@
             }
         }
         
-        // ============================================
-        // GUARDAR DATOS EN GITHUB
-        // ============================================
+
         async function guardarEnGitHub() {
             if (isSaving) {
-                mostrarNotificacion('⏳ Operación en curso', 'warning');
+                mostrarNotificacion('Operación en curso', 'warning');
                 return;
             }
             
@@ -387,21 +377,18 @@
                 ]);
                 
                 updateLastSync();
-                setStatus('connected', '✅ Conectado');
-                mostrarNotificacion('✅ Cambios guardados en GitHub');
+                setStatus('connected', 'Conectado');
+                mostrarNotificacion('Cambios guardados en GitHub');
             } catch (error) {
                 console.error('Error:', error);
-                setStatus('error', '❌ Error al guardar');
-                mostrarNotificacion('❌ Error al guardar', 'error');
+                setStatus('error', 'Error al guardar');
+                mostrarNotificacion('Error al guardar', 'error');
             } finally {
                 isSaving = false;
                 document.getElementById('saveBtn').disabled = false;
             }
         }
         
-        // ============================================
-        // UTILIDADES DE ESTADO
-        // ============================================
         function setStatus(type, text) {
             const statusBar = document.getElementById('statusBar');
             const statusText = document.getElementById('statusText');
@@ -417,9 +404,6 @@
             document.getElementById('lastSync').textContent = now.toLocaleString('es-CO');
         }
         
-        // ============================================
-        // CUMPLEAÑOS - CRUD
-        // ============================================
         function renderCumpleanos() {
             const tbody = document.getElementById('cumpleanosTable');
             tbody.innerHTML = '';
@@ -429,7 +413,6 @@
                 return;
             }
             
-            // ✅ CREAR COPIA ORDENADA (sin modificar el original)
             const cumpleanosOrdenados = [...cumpleanosData].sort((a, b) => {
                 const [mesA, diaA] = a.fecha.split('-').map(Number);
                 const [mesB, diaB] = b.fecha.split('-').map(Number);
@@ -440,7 +423,6 @@
             });
             
             cumpleanosOrdenados.forEach((persona, index) => {
-                // ✅ Encontrar el índice original para editar/eliminar correctamente
                 const originalIndex = cumpleanosData.findIndex(p => 
                     p.nombre === persona.nombre && p.fecha === persona.fecha
                 );
@@ -469,7 +451,6 @@
             rows.forEach((row, index) => {
                 const nombre = row.cells[0]?.textContent.toLowerCase() || '';
                 
-                // ✅ Usar el dato original del array en lugar del texto formateado
                 const persona = cumpleanosData[index];
                 let matchMes = true;
                 
@@ -478,11 +459,9 @@
                     const mes = persona.fecha ? persona.fecha.split('-')[0] : '';
                     matchMes = mes === filterMes;
                 }
-                
-                // Filtrar por nombre
+
                 const matchNombre = nombre.includes(search);
                 
-                // Mostrar si cumple ambos filtros
                 row.style.display = (matchNombre && matchMes) ? '' : 'none';
             });
         }
@@ -500,9 +479,6 @@
             await guardarEnGitHub();
         }
         
-        // ============================================
-        // HORARIOS - CRUD
-        // ============================================
         function loadHorarios() {
             currentDia = document.getElementById('diaSelect').value;
             const diaData = horariosData[currentDia] || horariosData["0"] || { cumpleanos: [], anuncios_video: [], pausas_activas: {} };
@@ -628,9 +604,6 @@
             openModal('horarioPausa', null, key);
         }
         
-        // ============================================
-        // MODAL Y FORMULARIOS
-        // ============================================
         function openModal(tipo, data = null, pausaKey = null) {
             const modal = document.getElementById('modal');
             const form = document.getElementById('modalForm');
@@ -654,11 +627,13 @@
                 }
                 
                 fields.innerHTML = `
+                <br><br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Nombre Completo *</strong></label>
                         <input type="text" name="nombre" value="${data?.nombre || ''}" required 
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Fecha de Cumpleaños *</strong></label>
                         <div style="display: flex; gap: 10px; margin-top: 5px;">
@@ -694,11 +669,13 @@
             } else if (tipo === 'horarioCumple') {
                 title.textContent = data ? '✏️ Editar' : '➕ Agregar Cumpleaños';
                 fields.innerHTML = `
+                <br><br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Hora Inicio *</strong></label>
                         <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required 
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Duración por Persona (segundos) *</strong></label>
                         <input type="number" name="duracion_por_persona" value="${data?.duracion_por_persona || 60}" required 
@@ -708,17 +685,20 @@
             } else if (tipo === 'horarioAnuncio') {
                 title.textContent = data ? '✏️ Editar' : '➕ Agregar Anuncio';
                 fields.innerHTML = `
+                <br><br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Hora Inicio *</strong></label>
                         <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required 
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>ID Video YouTube *</strong></label>
                         <input type="text" name="archivo" value="${data?.archivo || ''}" placeholder="dGjbt4grjLU" required 
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                        <small style="color: #666;">Solo el ID del video (ej: dGjbt4grjLU)</small>
+                        <small style="color: #666;">Solo el ID del video YouTube 10 digitos</small>
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Duración (segundos) *</strong></label>
                         <input type="number" name="duracion" value="${data?.duracion || 60}" required 
@@ -731,6 +711,7 @@
                     '<option value="pausa_1">Pausa 1</option><option value="pausa_2">Pausa 2</option>';
                 
                 fields.innerHTML = `
+                <br><br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Grupo de Pausa</strong></label>
                         <select name="pausa_key" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
@@ -739,16 +720,19 @@
                             <option value="pausa_2">Pausa 2</option>
                         </select>
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Hora Inicio *</strong></label>
                         <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required 
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>ID Video YouTube *</strong></label>
                         <input type="text" name="archivo" value="${data?.archivo || ''}" placeholder="WfdH9x3C0lg" required 
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
+                    <br>
                     <div style="margin-bottom: 15px;">
                         <label><strong>Duración (segundos) *</strong></label>
                         <input type="number" name="duracion" value="${data?.duracion || 600}" required 
