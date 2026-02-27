@@ -191,7 +191,7 @@
         
         <!-- BARRA DE ESTADO -->
         <div class="status-bar connected" id="statusBar">
-            <div>
+             <div>
                 <strong>Estado:</strong> <span id="statusText">Conectado</span>
                 <span id="loadingIndicator" style="display: none;" class="loading"></span>
             </div>
@@ -350,11 +350,11 @@
                 horariosData = horarioResult.content;
                 
                 updateLastSync();
-                setStatus('connected', 'Conectado');
+                setStatus('connected', '✅ Conectado');
                 renderCumpleanos();
                 loadHorarios();
                 
-                mostrarNotificacion('Datos cargados correctamente');
+                mostrarNotificacion('✅ Datos cargados correctamente');
             } catch (error) {
                 console.error('Error:', error);
                 setStatus('error', '❌ Error de conexión');
@@ -389,12 +389,12 @@
                 ]);
                 
                 updateLastSync();
-                setStatus('connected', 'Conectado');
-                mostrarNotificacion('Cambios guardados en GitHub');
+                setStatus('connected', '✅ Conectado');
+                mostrarNotificacion('✅ Cambios guardados en GitHub');
             } catch (error) {
                 console.error('Error:', error);
-                setStatus('error', 'Error al guardar');
-                mostrarNotificacion('Error al guardar', 'error');
+                setStatus('error', '❌ Error al guardar');
+                mostrarNotificacion('❌ Error al guardar', 'error');
             } finally {
                 isSaving = false;
                 document.getElementById('saveBtn').disabled = false;
@@ -431,8 +431,7 @@
                 return;
             }
             
-            //
-            CREAR COPIA ORDENADA (sin modificar el original)
+            // ✅ CREAR COPIA ORDENADA (sin modificar el original)
             const cumpleanosOrdenados = [...cumpleanosData].sort((a, b) => {
                 const [mesA, diaA] = a.fecha.split('-').map(Number);
                 const [mesB, diaB] = b.fecha.split('-').map(Number);
@@ -443,7 +442,7 @@
             });
             
             cumpleanosOrdenados.forEach((persona, index) => {
-                //Encontrar el índice original para editar/eliminar correctamente
+                // ✅ Encontrar el índice original para editar/eliminar correctamente
                 const originalIndex = cumpleanosData.findIndex(p => 
                     p.nombre === persona.nombre && p.fecha === persona.fecha
                 );
@@ -472,7 +471,7 @@
             rows.forEach((row, index) => {
                 const nombre = row.cells[0]?.textContent.toLowerCase() || '';
                 
-                //Usar el dato original del array en lugar del texto formateado
+                // ✅ Usar el dato original del array en lugar del texto formateado
                 const persona = cumpleanosData[index];
                 let matchMes = true;
                 
@@ -875,6 +874,3 @@
     </script>
 </body>
 </html>
-
-
-
