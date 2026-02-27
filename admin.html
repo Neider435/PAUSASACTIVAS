@@ -187,9 +187,8 @@
     </div>
     <div class="container">
         <h1>Panel de Administración - Pausas Activas Inlotrans</h1>
-        <p class="subtitle">Gestiona cumpleaños y horarios directamente en GitHub</p>
+        <br><br><br>
         
-        <!-- BARRA DE ESTADO -->
         <div class="status-bar connected" id="statusBar">
              <div>
                 <strong>Estado:</strong> <span id="statusText">Conectado</span>
@@ -234,7 +233,6 @@
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Cedula</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
                     </tr>
@@ -662,11 +660,6 @@
                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
                     </div>
                     <div style="margin-bottom: 15px;">
-                        <label><strong>Numero de Cedula *</strong></label>
-                        <input type="number" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" name="cedula" value=" " required 
-                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
                         <label><strong>Fecha de Cumpleaños *</strong></label>
                         <div style="display: flex; gap: 10px; margin-top: 5px;">
                             <div style="flex: 1;">
@@ -874,4 +867,3 @@
     </script>
 </body>
 </html>
-
