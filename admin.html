@@ -350,15 +350,15 @@
                 horariosData = horarioResult.content;
                 
                 updateLastSync();
-                setStatus('connected', '✅ Conectado');
+                setStatus('connected', 'Conectado');
                 renderCumpleanos();
                 loadHorarios();
                 
-                mostrarNotificacion('✅ Datos cargados correctamente');
+                mostrarNotificacion('Datos cargados correctamente');
             } catch (error) {
                 console.error('Error:', error);
-                setStatus('error', '❌ Error de conexión');
-                mostrarNotificacion('❌ Error al cargar datos', 'error');
+                setStatus('error', 'Error de conexión');
+                mostrarNotificacion('Error al cargar datos', 'error');
             }
         }
         
@@ -874,3 +874,4 @@
     </script>
 </body>
 </html>
+
