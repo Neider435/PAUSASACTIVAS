@@ -6,21 +6,27 @@ let player;
 let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
 let userInteracted = false;
+
+// NUEVO: Registro para bloquear contenidos mientras se reproducen
 let contentLocks = {}; 
 
+// Detectar si estamos en una TV o dispositivo móvil
 const isMobileOrTV = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|SmartTV|TV|Xbox|PlayStation|Nintendo|Apple TV|Samsung TV/i.test(navigator.userAgent);
 console.log(`Dispositivo detectado: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'}`);
 
 function onYouTubeIframeAPIReady() {
   console.log("API de YouTube lista.");
   isYoutubeApiLoaded = true;
-  if (youtubePlayerPromise) youtubePlayerPromise.resolve();
+  if (youtubePlayerPromise) {
+    youtubePlayerPromise.resolve();
+  }
 }
 
 function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
+    // ✅ CORREGIDO: Sin espacios al final
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
@@ -39,7 +45,11 @@ function clearAll() {
     currentOverlayTimeout = null;
   }
   if (player) {
-    try { player.destroy(); } catch (e) { console.log("Error player:", e); }
+    try {
+      player.destroy();
+    } catch (e) {
+      console.log("Error al destruir player:", e);
+    }
     player = null;
   }
   const overlay = document.getElementById("overlay");
@@ -60,59 +70,66 @@ function clearAll() {
 
 function showOverlay(contentId, callback, duracion) {
   if (activeFile === contentId) return;
+  
   clearAll();
   
   const overlay = document.getElementById("overlay");
   const mainIframe = document.getElementById("main-iframe");
   
   activeFile = contentId;
-  playedFiles.add(contentId);  // ✅ Se marca como reproducido
+  playedFiles.add(contentId);
   
-  // Bloqueo temporal: duración + 5 segundos de margen
-  const lockTime = Date.now() + (duracion * 1000) + 5000;
+  const lockTime = Date.now() + (duracion * 1000) + 2000;
   contentLocks[contentId] = lockTime;
   
   mainIframe.style.display = "none";
   overlay.style.display = "flex";
+  
   callback();
   
   if (duracion) {
     currentOverlayTimeout = setTimeout(() => {
-      if (activeFile === contentId) clearAll();
-    }, (duracion * 1000) + 8000);
+      if (activeFile === contentId) {
+        console.log(`[Respaldo] Duración de ${contentId} terminada. Cerrando.`);
+        clearAll();
+      }
+    }, (duracion * 1000) + 5000);
   }
 }
 
 function showBirthdayMessage(nombre, duracion) {
-  const contentId = `cumpleanos_${nombre}`;  // ✅ ID consistente
+  const contentId = `cumpleanos_${nombre}_${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}`;
   showOverlay(contentId, () => {
     const dynamicContent = document.getElementById("dynamic-content");
     const birthdayText = document.getElementById("birthday-text");
-    dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños">`;
+    
+    dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
     dynamicContent.style.display = 'block';
+    
     birthdayText.innerHTML = `${nombre}`;
     birthdayText.style.display = 'block';
   }, duracion);
 }
 
+// ============================================
+// FUNCIÓN CORREGIDA: playYoutubeVideo()
+// ============================================
 async function playYoutubeVideo(videoId, duracion) {
-  const cleanVideoId = videoId.trim();
   const muted = isMobileOrTV ? true : !userInteracted;
-  
-  // ✅ ID CONSISTENTE: tipo_archivo (igual que en checkEstado)
+  // ✅ CORREGIDO: contentId consistente con checkEstado
+  const cleanVideoId = videoId.trim();
   const contentId = `video_${cleanVideoId}`;
   
-  // Verificar bloqueo
   if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
-    console.log(`🔒 Bloqueado: ${contentId}`);
+    console.log(`🔒 Contenido bloqueado activamente: ${contentId}`);
     return;
   }
 
-  console.log(`📱 Dispositivo: ${isMobileOrTV ? 'Móvil/TV' : 'PC'} | Muted: ${muted}`);
+  console.log(`📱 Dispositivo: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'} | Muted: ${muted}`);
   
   showOverlay(contentId, async () => {
     const dynamicContent = document.getElementById("dynamic-content");
-    dynamicContent.innerHTML = `<div id="youtube-player" style="width:100%;height:100%;position:relative;"></div>`;
+    dynamicContent.innerHTML = `<div id="youtube-player" style="width: 100%; height: 100%; position: relative;"></div>`;
     dynamicContent.style.display = 'flex';
     document.getElementById('audio-button').style.display = 'none';
     
@@ -120,22 +137,35 @@ async function playYoutubeVideo(videoId, duracion) {
       await loadYoutubeApi();
       
       player = new YT.Player('youtube-player', {
+        // ✅ CORREGIDO: Sin espacios al final
         host: 'https://www.youtube-nocookie.com',
-        height: '100%', width: '100%', videoId: cleanVideoId,
+        height: '100%',
+        width: '100%',
+        videoId: cleanVideoId,
         playerVars: {
-          'autoplay': 1, 'playsinline': 1, 'controls': 0, 'modestbranding': 1,
-          'mute': muted ? 1 : 0, 'rel': 0, 'showinfo': 0, 'iv_load_policy': 3,
+          'autoplay': 1,
+          'playsinline': 1,
+          'controls': 0,
+          'modestbranding': 1,
+          'mute': muted ? 1 : 0,
+          'rel': 0,
+          'showinfo': 0,
+          'iv_load_policy': 3,
           'origin': window.location.origin
         },
         events: {
           'onReady': (event) => {
-            console.log("✅ Video listo");
+            console.log("✅ Video YouTube listo");
             event.target.playVideo();
-            if (!muted) { event.target.setVolume(100); event.target.unMute(); }
+            if (!muted) {
+              event.target.setVolume(100);
+              event.target.unMute();
+            }
           },
           'onStateChange': (event) => {
+            console.log("Estado del video:", event.data);
             if (event.data === YT.PlayerState.ENDED) {
-              console.log("✅ Video terminado");
+              console.log("✅ Video terminado naturalmente");
               delete contentLocks[contentId];
               clearAll();
             }
@@ -148,14 +178,14 @@ async function playYoutubeVideo(videoId, duracion) {
         }
       });
     } catch (error) {
-      console.error("❌ Error API:", error);
+      console.error("❌ Error API YouTube:", error);
       delete contentLocks[contentId];
       clearAll();
     }
   }, duracion);
 }
 
-// ✅ FUNCIÓN PARA LIMPIAR DATOS JSON (trim recursivo)
+// ✅ NUEVA: Función para limpiar datos JSON (trim recursivo)
 function limpiarDatos(obj) {
   if (typeof obj === 'string') return obj.trim();
   if (Array.isArray(obj)) return obj.map(limpiarDatos);
@@ -169,11 +199,15 @@ function limpiarDatos(obj) {
   return obj;
 }
 
+// ============================================
+// FUNCIÓN OPTIMIZADA: checkEstado()
+// ============================================
 async function checkEstado() {
-  if (document.getElementById('init-overlay')?.style.display === 'flex') return;
+  if (document.getElementById('init-overlay').style.display === 'flex') return;
 
   try {
     const timestamp = Date.now();
+    
     const [cumpleResponse, horarioResponse] = await Promise.all([
       fetch(`/data/cumpleanos.json?t=${timestamp}`),
       fetch(`/data/horarios.json?t=${timestamp}`)
@@ -183,10 +217,9 @@ async function checkEstado() {
       throw new Error(`Error HTTP: ${cumpleResponse.status}, ${horarioResponse.status}`);
     }
 
-    // ✅ LIMPIAR los datos al cargar
-    let cumpleanosData = limpiarDatos(await cumpleResponse.json());
-    let horariosData = limpiarDatos(await horarioResponse.json());
-    
+    // ✅ CORREGIDO: Limpiar datos al cargar (elimina espacios de JSON)
+    const cumpleanosData = limpiarDatos(await cumpleResponse.json());
+    const horariosData = limpiarDatos(await horarioResponse.json());
     const cumpleanosArray = Array.isArray(cumpleanosData) ? cumpleanosData : [cumpleanosData];
     
     const now = new Date();
@@ -199,10 +232,13 @@ async function checkEstado() {
     const anunciosVideo = todayConfig.anuncios_video || [];
     const pausasActivas = todayConfig.pausas_activas || {};
 
-    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTime = currentHour * 60 + currentMinute;
+
     let activeContent = null;
 
-    // 1. Cumpleaños
+    // 1. Verificar cumpleaños HOY
     let birthdayPerson = null;
     for (const persona of cumpleanosArray) {
       const [mesStr, diaStr] = persona.fecha.split('-');
@@ -218,27 +254,37 @@ async function checkEstado() {
         const [h, m] = horario.hora_inicio.split(':').map(Number);
         const start = h * 60 + m;
         const end = start + ((horario.duracion_por_persona || 60) / 60);
+        
         if (currentTime >= start && currentTime <= end) {
-          activeContent = { tipo: "cumpleanos", nombre: birthdayPerson.nombre, duracion: horario.duracion_por_persona || 60 };
+          activeContent = { 
+            tipo: "cumpleanos", 
+            nombre: birthdayPerson.nombre, 
+            duracion: horario.duracion_por_persona || 60 
+          };
           break;
         }
       }
     }
 
-    // 2. Anuncios de video
+    // 2. Verificar anuncios de video
     if (!activeContent) {
       for (const anuncio of anunciosVideo) {
         const [h, m] = anuncio.hora_inicio.split(':').map(Number);
         const start = h * 60 + m;
         const end = start + ((anuncio.duracion || 60) / 60);
+        
         if (currentTime >= start && currentTime <= end) {
-          activeContent = { tipo: "anuncio_video", archivo: anuncio.archivo, duracion: anuncio.duracion || 60 };
+          activeContent = { 
+            tipo: "anuncio_video", 
+            archivo: anuncio.archivo, 
+            duracion: anuncio.duracion || 60 
+          };
           break;
         }
       }
     }
 
-    // 3. Pausas activas
+    // 3. Verificar pausas activas
     if (!activeContent) {
       for (const grupo of Object.values(pausasActivas)) {
         const pausas = Array.isArray(grupo) ? grupo : [grupo];
@@ -246,8 +292,13 @@ async function checkEstado() {
           const [h, m] = pausa.hora_inicio.split(':').map(Number);
           const start = h * 60 + m;
           const end = start + ((pausa.duracion || 600) / 60);
+          
           if (currentTime >= start && currentTime <= end) {
-            activeContent = { tipo: "pausas_activas", archivo: pausa.archivo, duracion: pausa.duracion || 600 };
+            activeContent = { 
+              tipo: "pausas_activas", 
+              archivo: pausa.archivo, 
+              duracion: pausa.duracion || 600 
+            };
             break;
           }
         }
@@ -255,48 +306,46 @@ async function checkEstado() {
       }
     }
 
-    // === VISUALIZACIÓN ===
+    // LÓGICA DE VISUALIZACIÓN
     if (activeContent) {
-      // ✅ GENERAR contentId CONSISTENTE (igual formato en todas partes)
       let contentId;
       if (activeContent.tipo === "cumpleanos") {
-        contentId = `cumpleanos_${activeContent.nombre}`;
+        contentId = `cumpleanos_${activeContent.nombre}_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
       } else {
-        // ✅ Para videos: "video_ID" (coincide con playYoutubeVideo)
+        // ✅ CORREGIDO: Mismo formato que playYoutubeVideo: "video_ID"
         contentId = `video_${activeContent.archivo}`;
       }
 
-      // Verificar bloqueo por tiempo
       if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
-        console.log(`⏳ Esperando: ${contentId}`);
+        console.log(`⏳ Esperando... ${contentId} aún está en periodo de bloqueo.`);
         return;
       }
 
-      // Verificar si ya se reprodujo HOY
       if (!playedFiles.has(contentId)) {
         console.log(`🎯 REPRODUCIENDO: ${contentId}`);
         if (activeContent.tipo === "cumpleanos") {
           showBirthdayMessage(activeContent.nombre, activeContent.duracion);
         } else if (activeContent.archivo && /^[a-zA-Z0-9_-]{11}$/.test(activeContent.archivo.trim())) {
+          // ✅ CORREGIDO: .trim() en el regex para aceptar IDs con espacios
           playYoutubeVideo(activeContent.archivo, activeContent.duracion);
         }
       } else {
         console.log(`⏭️ Ya reproducido hoy: ${contentId}`);
       }
     } else {
-      // Limpiar locks expirados
       const nowTime = Date.now();
       for (const key in contentLocks) {
-        if (contentLocks[key] < nowTime) delete contentLocks[key];
+        if (contentLocks[key] < nowTime) {
+          delete contentLocks[key];
+        }
       }
       
       const overlay = document.getElementById("overlay");
-      if (overlay?.style.display !== "none") clearAll();
-      
-      // ✅ SOLO limpiar playedFiles a medianoche (NO en cada ciclo sin contenido)
+      if (overlay.style.display !== "none") {
+        clearAll();
+      }
       if (now.getHours() === 0 && now.getMinutes() < 2) {
         playedFiles.clear();
-        console.log("🔄 playedFiles limpiado para nuevo día");
       }
     }
 
@@ -306,12 +355,13 @@ async function checkEstado() {
 }
 
 function initializeApplication() {
+  console.log("Página cargada. Iniciando aplicación...");
   if (!userInteracted) {
     document.getElementById('init-overlay').style.display = 'flex';
     document.getElementById('main-iframe').style.display = 'none';
   } else {
     checkEstado();
-    checkingInterval = setInterval(checkEstado, 30000); // 30 segundos
+    checkingInterval = setInterval(checkEstado, 30000);
   }
 }
 
@@ -319,6 +369,7 @@ function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
   document.getElementById('main-iframe').style.display = 'block';
+  console.log("Interacción de usuario registrada. Habilitando sonido.");
   checkEstado();
   checkingInterval = setInterval(checkEstado, 30000);
 }
