@@ -7,7 +7,7 @@ let isYoutubeApiLoaded = false;
 let youtubePlayerPromise = null;
 let userInteracted = false;
 
-// Registro para bloquear contenidos mientras se reproducen
+// NUEVO: Registro para bloquear contenidos mientras se reproducen
 let contentLocks = {}; 
 
 // Detectar si estamos en una TV o dispositivo móvil
@@ -69,6 +69,7 @@ function clearAll() {
 }
 
 function showOverlay(contentId, callback, duracion) {
+  // Doble verificación de seguridad
   if (activeFile === contentId) return;
   
   clearAll();
@@ -78,11 +79,11 @@ function showOverlay(contentId, callback, duracion) {
   
   activeFile = contentId;
   
-  // MARCAR como reproducido INMEDIATAMENTE
+  // MARCAR como reproducido INMEDIATAMENTE para evitar duplicados en los próximos 15s
   playedFiles.add(contentId);
   
-  // Crear bloqueo temporal para evitar duplicados
-  const lockTime = Date.now() + (duracion * 1000) + 2000;
+  // Crear bloqueo temporal
+  const lockTime = Date.now() + (duracion * 1000) + 2000; // Duración + 2s margen
   contentLocks[contentId] = lockTime;
   
   mainIframe.style.display = "none";
@@ -90,13 +91,15 @@ function showOverlay(contentId, callback, duracion) {
   
   callback();
   
+  // Solo usamos el timeout externo como respaldo de seguridad, no como principal
   if (duracion) {
     currentOverlayTimeout = setTimeout(() => {
+      // Solo limpiar si el player no ha reportado que terminó ya
       if (activeFile === contentId) {
         console.log(`[Respaldo] Duración de ${contentId} terminada. Cerrando.`);
         clearAll();
       }
-    }, (duracion * 1000) + 5000);
+    }, (duracion * 1000) + 5000); // Margen extra de 5s por si el player falla
   }
 }
 
@@ -114,6 +117,9 @@ function showBirthdayMessage(nombre, duracion) {
   }, duracion);
 }
 
+// ============================================
+// FUNCIÓN CORREGIDA: playYoutubeVideo()
+// ============================================
 async function playYoutubeVideo(videoId, duracion) {
   const muted = isMobileOrTV ? true : !userInteracted;
   const contentId = `youtube_${videoId}`;
@@ -184,13 +190,14 @@ async function playYoutubeVideo(videoId, duracion) {
 }
 
 // ============================================
-// FUNCIÓN PRINCIPAL: checkEstado() - OPTIMIZADA
+// FUNCIÓN OPTIMIZADA: checkEstado() - Lectura Directa
 // ============================================
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') return;
 
   try {
-    // Lectura directa de archivos estáticos (gratis e ilimitado)
+    // ✅ LECTURA DIRECTA DE ARCHIVOS ESTÁTICOS (No gasta funciones de Netlify)
+    // Agregamos timestamp para evitar caché agresivo
     const timestamp = Date.now();
     
     const [cumpleResponse, horarioResponse] = await Promise.all([
@@ -208,38 +215,13 @@ async function checkEstado() {
     
     const now = new Date();
     const dayOfWeek = now.getDay();
-    const todayKey = dayOfWeek.toString();
-    
-    // Obtener configuración del día actual (limpiando espacios en las claves)
-    let todayConfig = null;
-    for (const key of Object.keys(horariosData)) {
-      if (key.trim() === todayKey) {
-        todayConfig = horariosData[key];
-        break;
-      }
-    }
-    if (!todayConfig) {
-      for (const key of Object.keys(horariosData)) {
-        if (key.trim() === "0") {
-          todayConfig = horariosData[key];
-          break;
-        }
-      }
-    }
+    const todayConfig = horariosData[dayOfWeek.toString()] || horariosData["0"];
     
     if (!todayConfig) return;
 
-    // Extraer contenidos (limpiando espacios en claves)
-    let cumpleanosHorarios = [];
-    let anunciosVideo = [];
-    let pausasActivas = {};
-    
-    for (const key of Object.keys(todayConfig)) {
-      const cleanKey = key.trim();
-      if (cleanKey === "cumpleanos") cumpleanosHorarios = todayConfig[key] || [];
-      else if (cleanKey === "anuncios_video") anunciosVideo = todayConfig[key] || [];
-      else if (cleanKey === "pausas_activas") pausasActivas = todayConfig[key] || {};
-    }
+    const cumpleanosHorarios = todayConfig.cumpleanos || [];
+    const anunciosVideo = todayConfig.anuncios_video || [];
+    const pausasActivas = todayConfig.pausas_activas || {};
 
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -250,37 +232,25 @@ async function checkEstado() {
     // 1. Verificar cumpleaños HOY
     let birthdayPerson = null;
     for (const persona of cumpleanosArray) {
-      // Limpiar espacios en los datos
-      const nombre = (persona.nombre || "").trim();
-      const fecha = (persona.fecha || "").trim();
-      
-      const [mesStr, diaStr] = fecha.split('-');
-      const mes = parseInt(mesStr, 10);
-      const dia = parseInt(diaStr, 10);
-      
-      const birthDate = new Date(now.getFullYear(), mes - 1, dia);
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      if (birthDate.toDateString() === today.toDateString()) {
-        birthdayPerson = { nombre, fecha };
+      const [mesStr, diaStr] = persona.fecha.split('-');
+      const birthDate = new Date(now.getFullYear(), parseInt(mesStr) - 1, parseInt(diaStr));
+      if (birthDate.toDateString() === now.toDateString()) {
+        birthdayPerson = persona;
         break;
       }
     }
 
     if (birthdayPerson) {
       for (const horario of cumpleanosHorarios) {
-        const horaInicio = (horario.hora_inicio || "").trim();
-        const [h, m] = horaInicio.split(':').map(Number);
+        const [h, m] = horario.hora_inicio.split(':').map(Number);
         const start = h * 60 + m;
-        const duracionSeg = parseInt(horario.duracion_por_persona) || 60;
-        const end = start + (duracionSeg / 60);
+        const end = start + ((horario.duracion_por_persona || 60) / 60);
         
         if (currentTime >= start && currentTime <= end) {
           activeContent = { 
             tipo: "cumpleanos", 
             nombre: birthdayPerson.nombre, 
-            duracion: duracionSeg,
-            horaProgramada: horaInicio
+            duracion: horario.duracion_por_persona || 60 
           };
           break;
         }
@@ -290,19 +260,15 @@ async function checkEstado() {
     // 2. Verificar anuncios de video
     if (!activeContent) {
       for (const anuncio of anunciosVideo) {
-        const horaInicio = (anuncio.hora_inicio || "").trim();
-        const archivo = (anuncio.archivo || "").trim();
-        const [h, m] = horaInicio.split(':').map(Number);
+        const [h, m] = anuncio.hora_inicio.split(':').map(Number);
         const start = h * 60 + m;
-        const duracionSeg = parseInt(anuncio.duracion) || 60;
-        const end = start + (duracionSeg / 60);
+        const end = start + ((anuncio.duracion || 60) / 60);
         
         if (currentTime >= start && currentTime <= end) {
           activeContent = { 
             tipo: "anuncio_video", 
-            archivo: archivo, 
-            duracion: duracionSeg,
-            horaProgramada: horaInicio
+            archivo: anuncio.archivo, 
+            duracion: anuncio.duracion || 60 
           };
           break;
         }
@@ -314,19 +280,15 @@ async function checkEstado() {
       for (const grupo of Object.values(pausasActivas)) {
         const pausas = Array.isArray(grupo) ? grupo : [grupo];
         for (const pausa of pausas) {
-          const horaInicio = (pausa.hora_inicio || "").trim();
-          const archivo = (pausa.archivo || "").trim();
-          const [h, m] = horaInicio.split(':').map(Number);
+          const [h, m] = pausa.hora_inicio.split(':').map(Number);
           const start = h * 60 + m;
-          const duracionSeg = parseInt(pausa.duracion) || 600;
-          const end = start + (duracionSeg / 60);
+          const end = start + ((pausa.duracion || 600) / 60);
           
           if (currentTime >= start && currentTime <= end) {
             activeContent = { 
               tipo: "pausas_activas", 
-              archivo: archivo, 
-              duracion: duracionSeg,
-              horaProgramada: horaInicio
+              archivo: pausa.archivo, 
+              duracion: pausa.duracion || 600 
             };
             break;
           }
@@ -341,13 +303,12 @@ async function checkEstado() {
       if (activeContent.tipo === "cumpleanos") {
         contentId = `cumpleanos_${activeContent.nombre}_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
       } else {
-        // ✅ INCLUIR HORA EN EL ID para distinguir mismas URLs en diferentes horarios
-        contentId = `${activeContent.tipo}_${activeContent.archivo}_${activeContent.horaProgramada}`;
+        contentId = `${activeContent.tipo}_${activeContent.archivo}`;
       }
 
-      // Verificar bloqueo por tiempo
+      // VERIFICACIÓN DE BLOQUEO POR TIEMPO (Evita duplicados)
       if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
-        console.log(`⏳ Esperando... ${contentId} aún en bloqueo.`);
+        console.log(`⏳ Esperando... ${contentId} aún está en periodo de bloqueo.`);
         return;
       }
 
@@ -363,7 +324,7 @@ async function checkEstado() {
         console.log(`⏭️ Ya reproducido hoy: ${contentId}`);
       }
     } else {
-      // Limpiar solo locks expirados (NO limpiar playedFiles aquí)
+      // Limpiar locks antiguos cuando no hay contenido activo
       const nowTime = Date.now();
       for (const key in contentLocks) {
         if (contentLocks[key] < nowTime) {
@@ -375,12 +336,9 @@ async function checkEstado() {
       if (overlay.style.display !== "none") {
         clearAll();
       }
-      
-      // ✅ playedFiles.clear() SOLO a medianoche (00:00 - 00:02)
+      // Limpiar playedFiles a medianoche
       if (now.getHours() === 0 && now.getMinutes() < 2) {
-        console.log("🔄 Nuevo día: limpiando playedFiles y contentLocks");
         playedFiles.clear();
-        contentLocks = {};
       }
     }
 
@@ -396,7 +354,7 @@ function initializeApplication() {
     document.getElementById('main-iframe').style.display = 'none';
   } else {
     checkEstado();
-    // Intervalo de 30 segundos (balance entre precisión y eficiencia)
+    // ⚠️ Puedes cambiar 15000 a 30000 o 60000 para reducir llamadas
     checkingInterval = setInterval(checkEstado, 30000);
   }
 }
@@ -405,7 +363,7 @@ function handleStartSound() {
   userInteracted = true;
   document.getElementById('init-overlay').style.display = 'none';
   document.getElementById('main-iframe').style.display = 'block';
-  console.log("Interacción registrada. Sonido habilitado.");
+  console.log("Interacción de usuario registrada. Habilitando sonido.");
   checkEstado();
   checkingInterval = setInterval(checkEstado, 30000);
 }
