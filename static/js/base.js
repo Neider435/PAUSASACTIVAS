@@ -14,6 +14,7 @@ let contentLocks = {};
 const isMobileOrTV = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|SmartTV|TV|Xbox|PlayStation|Nintendo|Apple TV|Samsung TV/i.test(navigator.userAgent);
 console.log(`Dispositivo detectado: ${isMobileOrTV ? 'Móvil/TV' : 'Computadora'}`);
 
+// Esta función es llamada automáticamente por la API de YouTube
 function onYouTubeIframeAPIReady() {
   console.log("API de YouTube lista.");
   isYoutubeApiLoaded = true;
@@ -26,7 +27,6 @@ function loadYoutubeApi() {
   if (!isYoutubeApiLoaded && !document.getElementById('youtube-api-script')) {
     const tag = document.createElement('script');
     tag.id = 'youtube-api-script';
-    // ✅ CORREGIDO: Sin espacios al final
     tag.src = "https://www.youtube.com/iframe_api";
     document.head.appendChild(tag);
     youtubePlayerPromise = new Promise((resolve) => {
@@ -69,6 +69,7 @@ function clearAll() {
 }
 
 function showOverlay(contentId, callback, duracion) {
+  // Doble verificación de seguridad
   if (activeFile === contentId) return;
   
   clearAll();
@@ -77,9 +78,12 @@ function showOverlay(contentId, callback, duracion) {
   const mainIframe = document.getElementById("main-iframe");
   
   activeFile = contentId;
+  
+  // MARCAR como reproducido INMEDIATAMENTE para evitar duplicados en los próximos 15s
   playedFiles.add(contentId);
   
-  const lockTime = Date.now() + (duracion * 1000) + 2000;
+  // Crear bloqueo temporal
+  const lockTime = Date.now() + (duracion * 1000) + 2000; // Duración + 2s margen
   contentLocks[contentId] = lockTime;
   
   mainIframe.style.display = "none";
@@ -87,13 +91,15 @@ function showOverlay(contentId, callback, duracion) {
   
   callback();
   
+  // Solo usamos el timeout externo como respaldo de seguridad, no como principal
   if (duracion) {
     currentOverlayTimeout = setTimeout(() => {
+      // Solo limpiar si el player no ha reportado que terminó ya
       if (activeFile === contentId) {
         console.log(`[Respaldo] Duración de ${contentId} terminada. Cerrando.`);
         clearAll();
       }
-    }, (duracion * 1000) + 5000);
+    }, (duracion * 1000) + 5000); // Margen extra de 5s por si el player falla
   }
 }
 
@@ -116,10 +122,9 @@ function showBirthdayMessage(nombre, duracion) {
 // ============================================
 async function playYoutubeVideo(videoId, duracion) {
   const muted = isMobileOrTV ? true : !userInteracted;
-  // ✅ CORREGIDO: contentId consistente con checkEstado + trim para eliminar espacios
-  const cleanVideoId = videoId.trim();
-  const contentId = `video_${cleanVideoId}`;
+  const contentId = `youtube_${videoId}`;
   
+  // Verificar bloqueo antes de iniciar
   if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
     console.log(`🔒 Contenido bloqueado activamente: ${contentId}`);
     return;
@@ -137,11 +142,10 @@ async function playYoutubeVideo(videoId, duracion) {
       await loadYoutubeApi();
       
       player = new YT.Player('youtube-player', {
-        // ✅ CORREGIDO: Sin espacios al final
         host: 'https://www.youtube-nocookie.com',
         height: '100%',
         width: '100%',
-        videoId: cleanVideoId,
+        videoId: videoId,
         playerVars: {
           'autoplay': 1,
           'playsinline': 1,
@@ -185,27 +189,15 @@ async function playYoutubeVideo(videoId, duracion) {
   }, duracion);
 }
 
-// ✅ NUEVA: Función para limpiar datos JSON (trim recursivo)
-function limpiarDatos(obj) {
-  if (typeof obj === 'string') return obj.trim();
-  if (Array.isArray(obj)) return obj.map(limpiarDatos);
-  if (typeof obj === 'object' && obj !== null) {
-    const limpio = {};
-    for (let [k, v] of Object.entries(obj)) {
-      limpio[k.trim()] = limpiarDatos(v);
-    }
-    return limpio;
-  }
-  return obj;
-}
-
 // ============================================
-// FUNCIÓN OPTIMIZADA: checkEstado()
+// FUNCIÓN OPTIMIZADA: checkEstado() - Lectura Directa
 // ============================================
 async function checkEstado() {
   if (document.getElementById('init-overlay').style.display === 'flex') return;
 
   try {
+    // ✅ LECTURA DIRECTA DE ARCHIVOS ESTÁTICOS (No gasta funciones de Netlify)
+    // Agregamos timestamp para evitar caché agresivo
     const timestamp = Date.now();
     
     const [cumpleResponse, horarioResponse] = await Promise.all([
@@ -217,9 +209,8 @@ async function checkEstado() {
       throw new Error(`Error HTTP: ${cumpleResponse.status}, ${horarioResponse.status}`);
     }
 
-    // ✅ CORREGIDO: Limpiar datos al cargar (elimina espacios de JSON)
-    const cumpleanosData = limpiarDatos(await cumpleResponse.json());
-    const horariosData = limpiarDatos(await horarioResponse.json());
+    const cumpleanosData = await cumpleResponse.json();
+    const horariosData = await horarioResponse.json();
     const cumpleanosArray = Array.isArray(cumpleanosData) ? cumpleanosData : [cumpleanosData];
     
     const now = new Date();
@@ -312,27 +303,28 @@ async function checkEstado() {
       if (activeContent.tipo === "cumpleanos") {
         contentId = `cumpleanos_${activeContent.nombre}_${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
       } else {
-        // ✅ CORREGIDO: Mismo formato que playYoutubeVideo: "video_ID"
-        contentId = `video_${activeContent.archivo}`;
+        contentId = `${activeContent.tipo}_${activeContent.archivo}`;
       }
 
+      // VERIFICACIÓN DE BLOQUEO POR TIEMPO (Evita duplicados)
       if (contentLocks[contentId] && Date.now() < contentLocks[contentId]) {
         console.log(`⏳ Esperando... ${contentId} aún está en periodo de bloqueo.`);
         return;
       }
 
+      // Verificar si ya se reprodujo HOY
       if (!playedFiles.has(contentId)) {
         console.log(`🎯 REPRODUCIENDO: ${contentId}`);
         if (activeContent.tipo === "cumpleanos") {
           showBirthdayMessage(activeContent.nombre, activeContent.duracion);
-        } else if (activeContent.archivo && /^[a-zA-Z0-9_-]{11}$/.test(activeContent.archivo.trim())) {
-          // ✅ CORREGIDO: .trim() en el regex para aceptar IDs con espacios
+        } else if (activeContent.archivo && /^[a-zA-Z0-9_-]{11}$/.test(activeContent.archivo)) {
           playYoutubeVideo(activeContent.archivo, activeContent.duracion);
         }
       } else {
         console.log(`⏭️ Ya reproducido hoy: ${contentId}`);
       }
     } else {
+      // Limpiar locks antiguos cuando no hay contenido activo
       const nowTime = Date.now();
       for (const key in contentLocks) {
         if (contentLocks[key] < nowTime) {
@@ -344,6 +336,7 @@ async function checkEstado() {
       if (overlay.style.display !== "none") {
         clearAll();
       }
+      // Limpiar playedFiles a medianoche
       if (now.getHours() === 0 && now.getMinutes() < 2) {
         playedFiles.clear();
       }
@@ -361,6 +354,7 @@ function initializeApplication() {
     document.getElementById('main-iframe').style.display = 'none';
   } else {
     checkEstado();
+    // ⚠️ Puedes cambiar 15000 a 30000 o 60000 para reducir llamadas
     checkingInterval = setInterval(checkEstado, 30000);
   }
 }
