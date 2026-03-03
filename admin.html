@@ -462,8 +462,8 @@
               const rows = document.querySelectorAll('#cumpleanosTable tr');
               
               rows.forEach((row, index) => {
-                  // Saltar la fila del encabezado
-                  if (row.querySelector('th')) return;
+                  // Saltar filas vacías o de encabezado
+                  if (!row.cells[0] || row.cells[0].tagName === 'TH') return;
                   
                   const nombre = row.cells[0]?.textContent.toLowerCase() || '';
                   
@@ -473,7 +473,7 @@
                   
                   if (persona && persona.fecha && filterMes) {
                       // Extraer mes del formato original "MM-DD"
-                      const mes = persona.fecha.split('-')[0];
+                      const mes = persona.fecha.trim().split('-')[0];
                       matchMes = mes === filterMes;
                   }
                   
