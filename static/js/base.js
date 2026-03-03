@@ -116,7 +116,7 @@ function showBirthdayMessage(nombre, duracion) {
 // ============================================
 async function playYoutubeVideo(videoId, duracion) {
   const muted = isMobileOrTV ? true : !userInteracted;
-  // ✅ CORREGIDO: contentId consistente con checkEstado
+  // ✅ CORREGIDO: contentId consistente con checkEstado + trim para eliminar espacios
   const cleanVideoId = videoId.trim();
   const contentId = `video_${cleanVideoId}`;
   
