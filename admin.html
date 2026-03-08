@@ -1,872 +1,1257 @@
-  <!DOCTYPE html>
-  <html lang="es">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="icon" href="prueba.png" type="image/png">
-      <title>Admin - Pausas Activas Inlotrans</title>
-      <style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Pausas Activas Inlotrans</title>
+    <style>
 
-          .logo-container {
+        .logo-container {
               position: absolute;
               top: 30px;
               left: 80px;
-          }
+        }
           
           .logo-container img {
               width: 100px;
               height: auto;
-          }
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-              font-family: Arial, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              min-height: 100vh;
-              padding: 20px;
-          }
-          .container {
-              max-width: 1400px;
-              margin: 0 auto;
-              background: white;
-              border-radius: 10px;
-              padding: 30px;
-              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-          }
-          h1 { text-align: center; color: #667eea; margin-bottom: 10px; }
-          .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
-          
-          .status-bar {
-              background: #e8f5e9;
-              border: 2px solid #4CAF50;
-              padding: 15px;
-              border-radius: 8px;
-              margin-bottom: 30px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              flex-wrap: wrap;
-              gap: 10px;
-          }
-          .status-bar.connected { background: #e8f5e9; border-color: #4CAF50; }
-          .status-bar.error { background: #ffebee; border-color: #f44336; }
-          .status-bar.saving { background: #fff3e0; border-color: #ff9800; }
-          
-          .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #eee; flex-wrap: wrap; }
-          .tab-btn {
-              padding: 12px 24px;
-              border: none;
-              background: #f5f5f5;
-              cursor: pointer;
-              font-size: 16px;
-              border-radius: 5px 5px 0 0;
-              transition: all 0.3s;
-          }
-          .tab-btn:hover { background: #e0e0e0; }
-          .tab-btn.active { background: #667eea; color: white; }
-          .tab-content { display: none; }
-          .tab-content.active { display: block; }
-          
-          .btn {
-              padding: 10px 20px;
-              border: none;
-              border-radius: 5px;
-              cursor: pointer;
-              font-size: 14px;
-              margin: 5px;
-              transition: all 0.3s;
-          }
-          .btn:hover { transform: translateY(-2px); opacity: 0.9; }
-          .btn-primary { background: #667eea; color: white; }
-          .btn-success { background: #4CAF50; color: white; }
-          .btn-danger { background: #f44336; color: white; }
-          .btn-warning { background: #ff9800; color: white; }
-          .btn-info { background: #2196F3; color: white; }
-          
-          .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-          
-          table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-              background: white;
-          }
-          th, td {
-              padding: 12px;
-              text-align: left;
-              border-bottom: 1px solid #ddd;
-          }
-          th { background: #667eea; color: white; }
-          tr:hover { background: #f5f5f5; }
-          
-          .modal {
-              display: none;
-              position: fixed;
-              top: 0; left: 0;
-              width: 100%; height: 100%;
-              background: rgba(0,0,0,0.5);
-              z-index: 1000;
-          }
-          .modal-content {
-              background: white;
-              margin: 50px auto;
-              padding: 30px;
-              border-radius: 10px;
-              width: 90%;
-              max-width: 500px;
-              max-height: 90vh;
-              overflow-y: auto;
-          }
-          .close { float: right; font-size: 28px; cursor: pointer; color: #aaa; }
-          .close:hover { color: #000; }
-          
-          .notification {
-              position: fixed;
-              top: 20px; right: 20px;
-              padding: 15px 25px;
-              background: #4CAF50;
-              color: white;
-              border-radius: 5px;
-              display: none;
-              z-index: 2000;
-              animation: slideIn 0.3s ease;
-          }
-          .notification.error { background: #f44336; }
-          .notification.warning { background: #ff9800; }
-          
-          @keyframes slideIn {
-              from { transform: translateX(100%); opacity: 0; }
-              to { transform: translateX(0); opacity: 1; }
-          }
-          
-          .dia-selector { margin-bottom: 20px; }
-          .dia-selector select { padding: 10px; font-size: 16px; border-radius: 5px; border: 2px solid #667eea; }
-          
-          .horario-group {
-              background: #f9f9f9;
-              padding: 15px;
-              margin-bottom: 15px;
-              border-radius: 5px;
-              border-left: 4px solid #667eea;
-          }
-          .horario-group h3 { color: #667eea; margin-bottom: 10px; }
-          
-          .search-box {
-              padding: 10px;
-              border: 1px solid #ddd;
-              border-radius: 5px;
-              margin-left: 10px;
-              font-size: 14px;
-          }
-          
-          .action-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
-          
-          .loading {
-              display: inline-block;
-              width: 20px;
-              height: 20px;
-              border: 3px solid #f3f3f3;
-              border-top: 3px solid #667eea;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-          }
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-          
-          .last-sync { font-size: 12px; color: #666; }
-          
-          @media (max-width: 768px) {
-              .tabs { flex-direction: column; }
-              table { font-size: 12px; }
-              .action-buttons { flex-direction: column; }
-              .status-bar { flex-direction: column; text-align: center; }
-          }
-      </style>
-  </head>
-  <body>
-    
-      <div id="login" style="position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;z-index:9999">
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* CONFIG BOX COLLAPSABLE */
+        .config-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .config-header {
+            padding: 15px 20px;
+            background: #ffc107;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #856404;
+            transition: background 0.3s;
+        }
+
+        .config-header:hover {
+            background: #ffca2c;
+        }
+
+        .config-toggle {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .config-toggle.rotated {
+            transform: rotate(180deg);
+        }
+
+        .config-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease;
+        }
+
+        .config-content.show {
+            padding: 20px;
+            max-height: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .status-bar {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .status-bar.connected {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+        }
+
+        .status-bar.error {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-info {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            display: none;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.error {
+            background: #f44336;
+        }
+
+        .notification.warning {
+            background: #ff9800;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .dia-selector {
+            margin-bottom: 20px;
+        }
+
+        .dia-selector select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 2px solid #667eea;
+        }
+
+        .horario-group {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .horario-group h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .search-box {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .last-sync {
+            font-size: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="login" style="position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;z-index:9999">
         <div style="background:#fff;padding:25px;border-radius:10px;text-align:center;max-width:350px">
           <h3 style="margin:0 0 15px;color:#667eea">Acceso Admin</h3>
           <input type="password" id="pass" placeholder="Contraseña" style="width:100%;padding:10px;margin:10px 0;border:1px solid #ddd;border-radius:5px">
           <button onclick="check()" style="width:100%;padding:10px;background:#667eea;color:#fff;border:none;border-radius:5px;cursor:pointer">Entrar</button>
-          <p id="err" style="color:#f44336;margin:10px 0 0;display:none">❌ Incorrecta</p>
+          <p id="err" style="color:#f44336;margin:10px 0 0;display:none">Incorrecta</p>
         </div>
-      </div>
+    </div>
 
-      <div class="logo-container">
-          <img src="prueba.png" alt="...">
-      </div>
-      <div class="container">
+    <div class="logo-container">
+        <img src="prueba.png" alt="...">
+    </div>
 
-          <h1>Panel de Administración - Inlotrans</h1>
-          <br><br><br>
+    <div class="container">
+        <h1>Panel de Administración - Pausas Activas Inlotrans</h1><br><br><br>
 
-          <div class="status-bar connected" id="statusBar">
-               <div>
-                  <strong>Estado:</strong> <span id="statusText">Conectado</span>
-                  <span id="loadingIndicator" style="display: none;" class="loading"></span>
-              </div>
-              <div class="last-sync">Última sincronización: <span id="lastSync">--</span></div>
-              <div>
-                  <a href="index.html" class="btn btn-info" target="_blank">Ver Pantalla Principal</a>
-              </div>
-          </div>
-          
-          <!-- TABS -->
-          <div class="tabs">
-              <button class="tab-btn active" onclick="showTab('cumpleanos')">Cumpleaños</button>
-              <button class="tab-btn" onclick="showTab('horarios')">Horarios</button>
-          </div>
-          
-          <!-- TAB CUMPLEAÑOS -->
-          <div id="cumpleanos" class="tab-content active">
-              <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                  <button class="btn btn-success" onclick="openModal('cumpleanos')">+ Agregar Cumpleañero</button>
-                  <input type="text" class="search-box" id="searchCumple" placeholder="🔍 Buscar por nombre..." 
-                         style="flex: 1; min-width: 200px;" onkeyup="filterCumpleanos()">
-                  <select id="filterMes" onchange="filterCumpleanos()" 
-                          style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-width: 150px;">
-                      <option value="">Todos los meses</option>
-                      <option value="01">Enero</option>
-                      <option value="02">Febrero</option>
-                      <option value="03">Marzo</option>
-                      <option value="04">Abril</option>
-                      <option value="05">Mayo</option>
-                      <option value="06">Junio</option>
-                      <option value="07">Julio</option>
-                      <option value="08">Agosto</option>
-                      <option value="09">Septiembre</option>
-                      <option value="10">Octubre</option>
-                      <option value="11">Noviembre</option>
-                      <option value="12">Diciembre</option>
-                  </select>
-              </div>
-              <table>
-                  <thead>
-                      <tr>
-                          <th>Nombre</th>
-                          <th>Fecha</th>
-                          <th>Acciones</th>
-                      </tr>
-                  </thead>
-                  <tbody id="cumpleanosTable"></tbody>
-              </table>
-          </div>
-          
-          <!-- TAB HORARIOS -->
-          <div id="horarios" class="tab-content">
-              <div class="dia-selector">
-                  <label><strong>Día de la semana: </strong></label>
-                  <select id="diaSelect" onchange="loadHorarios()">
-                      <option value="0">Domingo</option>
-                      <option value="1">Lunes</option>
-                      <option value="2">Martes</option>
-                      <option value="3">Miércoles</option>
-                      <option value="4">Jueves</option>
-                      <option value="5">Viernes</option>
-                      <option value="6">Sábado</option>
-                  </select>
-              </div>
-              
-              <div style="margin-bottom: 20px;">
-                  <button class="btn btn-success" onclick="openModal('horarioCumple')">+ Agregar horario Cumpleaños</button>
-                  <button class="btn btn-success" onclick="openModal('horarioAnuncio')">+ Agregar Anuncio</button>
-                  <button class="btn btn-success" onclick="openModal('horarioPausa')">+ Agregar Pausa Activa</button>
-              </div>
-              
-              <div id="horariosContent"></div>
-          </div>
-      </div>
-      
-      <!-- MODAL -->
-      <div id="modal" class="modal">
-          <div class="modal-content">
-              <span class="close" onclick="closeModal()">&times;</span>
-              <h2 id="modalTitle">Agregar</h2>
-              <form id="modalForm" onsubmit="saveData(event)">
-                  <div id="modalFields"></div>
-                  <div style="margin-top: 20px; text-align: right;">
-                      <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
-                      <button type="submit" class="btn btn-primary" id="saveBtn">Guardar</button>
-                  </div>
-              </form>
-          </div>
-      </div>
-      
-      <div id="notification" class="notification"></div>
-      
-      <script>
+        <!-- CONFIGURACIÓN GITHUB COLLAPSABLE -->
+        <div class="config-box">
+            <div class="config-header" onclick="toggleConfig()">
+                <span>Configuración de GitHub</span>
+                <span class="config-toggle" id="configToggle">▼</span>
+            </div>
+            <div class="config-content" id="configContent">
+                <div class="form-group">
+                    <label>GitHub Username:</label>
+                    <input type="text" id="githubUsername" placeholder="Neider435">
+                </div>
+                <div class="form-group">
+                    <label>Nombre del Repositorio:</label>
+                    <input type="text" id="githubRepo" placeholder="PAUSASACTIVAS">
+                </div>
+                <div class="form-group">
+                    <label>Acceso al Token del GitHub:</label>
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+                </div>
+                <button class="btn btn-primary" onclick="guardarConfig()">Guardar Configuración</button>
+                <button class="btn btn-success" onclick="testConnection()">Probar Conexión</button>
+                <span id="connectionStatus" style="margin-left: 10px;"></span>
+            </div>
+        </div>
 
+        <!-- BARRA DE ESTADO -->
+        <div class="status-bar connected" id="statusBar">
+            <div>
+                <strong>Estado:</strong> <span id="statusText">Conectado</span>
+                <span id="loadingIndicator" style="display: none;" class="loading"></span>
+            </div>
+            <div class="last-sync">Última sincronización: <span id="lastSync">--</span></div>
+            <div>
+                <a href="index.html" class="btn btn-info" target="_blank">Ver Pantalla Principal</a>
+            </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('cumpleanos')">Cumpleaños</button>
+            <button class="tab-btn" onclick="showTab('horarios')">Horarios</button>
+        </div>
+
+        <!-- TAB CUMPLEAÑOS -->
+        <div id="cumpleanos" class="tab-content active">
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <button class="btn btn-success" onclick="openModal('cumpleanos')">+ Agregar Cumpleaños</button>
+                <input type="text" class="search-box" id="searchCumple" placeholder="🔍 Buscar por nombre..."
+                    style="flex: 1; min-width: 200px;" onkeyup="filterCumpleanos()">
+                <select id="filterMes" onchange="filterCumpleanos()"
+                    style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; min-width: 150px;">
+                    <option value="">Todos los meses</option>
+                    <option value="01">Enero</option>
+                    <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cumpleanosTable"></tbody>
+            </table>
+        </div>
+
+        <!-- TAB HORARIOS -->
+        <div id="horarios" class="tab-content">
+            <div class="dia-selector">
+                <label><strong>Día de la semana: </strong></label>
+                <select id="diaSelect" onchange="loadHorarios()">
+                    <option value="0">Domingo</option>
+                    <option value="1">Lunes</option>
+                    <option value="2">Martes</option>
+                    <option value="3">Miércoles</option>
+                    <option value="4">Jueves</option>
+                    <option value="5">Viernes</option>
+                    <option value="6">Sábado</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-success" onclick="openModal('horarioCumple')">+ Agregar Cumpleaños</button>
+                <button class="btn btn-success" onclick="openModal('horarioAnuncio')">+ Agregar Anuncio</button>
+                <button class="btn btn-success" onclick="openModal('horarioPausa')">+ Agregar Pausa Activa</button>
+            </div>
+            <div id="horariosContent"></div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Agregar</h2>
+            <form id="modalForm" onsubmit="saveData(event)">
+                <div id="modalFields"></div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Guardar Datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
         const PASS='Inlo2026';function check(){const p=document.getElementById('pass').value,e=document.getElementById('err');if(p===PASS){sessionStorage.setItem('admin','1');document.getElementById('login').remove();cargarDatos?.()}else{e.style.display='block';document.getElementById('pass').value=''}}if(sessionStorage.getItem('admin')==='1'){document.getElementById('login').remove();cargarDatos?.()}document.getElementById('pass')?.addEventListener('keypress',e=>{if(e.key==='Enter')check()})
 
-          const API_ENDPOINT = '/.netlify/functions/github-proxy';
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        let cumpleanosData = [];
+        let horariosData = {};
+        let currentEdit = null;
+        let currentDia = '0';
+        let currentPausaKey = null;
+        let isSaving = false;
 
-          let cumpleanosData = [];
-          let horariosData = {};
-          let currentEdit = null;
-          let currentDia = '0';
-          let currentPausaKey = null;
-          let isSaving = false;
-          
-          const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-          const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-          
-          async function callGitHubAPI(method, path, data = null) {
-              const response = await fetch(API_ENDPOINT, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                      method,
-                      path,
-                      body: data
-                  })
-              });
-              
-              if (!response.ok) {
-                  const error = await response.text();
-                  throw new Error(`HTTP ${response.status}: ${error}`);
-              }
-              
-              return response.json();
-          }
-          
-          async function getFileContent(path) {
-              return await callGitHubAPI('GET', path);
-          }
-          
-          async function updateFile(path, content, sha, message) {
-              return await callGitHubAPI('PUT', path, { content, sha, message });
-          }
-          
-          // ============================================
-          // CARGAR DATOS
-          // ============================================
-          async function cargarDatos() {
-              setStatus('saving', 'Cargando datos...');
-              
-              try {
-                  const [cumpleResult, horarioResult] = await Promise.all([
-                      getFileContent('data/cumpleanos.json'),
-                      getFileContent('data/horarios.json')
-                  ]);
-                  
-                  cumpleanosData = cumpleResult.content;
-                  horariosData = horarioResult.content;
-                  
-                  updateLastSync();
-                  setStatus('connected', 'Conectado');
-                  renderCumpleanos();
-                  loadHorarios();
-                  
-                  mostrarNotificacion('Datos cargados correctamente');
-              } catch (error) {
-                  console.error('Error:', error);
-                  setStatus('error', 'Error de conexión');
-                  mostrarNotificacion('Error al cargar datos', 'error');
-              }
-          }
-          
+        const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-          async function guardarEnGitHub() {
-              if (isSaving) {
-                  mostrarNotificacion('Operación en curso', 'warning');
-                  return;
-              }
-              
-              isSaving = true;
-              setStatus('saving', 'Guardando...');
-              document.getElementById('saveBtn').disabled = true;
-              
-              try {
-                  const [cumpleData, horarioData] = await Promise.all([
-                      getFileContent('data/cumpleanos.json'),
-                      getFileContent('data/horarios.json')
-                  ]);
-                  
-                  await Promise.all([
-                      updateFile('data/cumpleanos.json', cumpleanosData, cumpleData.sha, 
-                          `Update cumpleaños - ${new Date().toLocaleString('es-CO')}`),
-                      updateFile('data/horarios.json', horariosData, horarioData.sha, 
-                          `Update horarios - ${new Date().toLocaleString('es-CO')}`)
-                  ]);
-                  
-                  updateLastSync();
-                  setStatus('connected', 'Conectado');
-                  mostrarNotificacion('Cambios guardados');
-              } catch (error) {
-                  console.error('Error:', error);
-                  setStatus('error', 'Error al guardar');
-                  mostrarNotificacion('Error al guardar', 'error');
-              } finally {
-                  isSaving = false;
-                  document.getElementById('saveBtn').disabled = false;
-              }
-          }
-          
-          function setStatus(type, text) {
-              const statusBar = document.getElementById('statusBar');
-              const statusText = document.getElementById('statusText');
-              const loadingIndicator = document.getElementById('loadingIndicator');
-              
-              statusBar.className = `status-bar ${type}`;
-              statusText.textContent = text;
-              loadingIndicator.style.display = type === 'saving' ? 'inline-block' : 'none';
-          }
-          
-          function updateLastSync() {
-              const now = new Date();
-              document.getElementById('lastSync').textContent = now.toLocaleString('es-CO');
-          }
-          
-          function renderCumpleanos() {
-              const tbody = document.getElementById('cumpleanosTable');
-              tbody.innerHTML = '';
-              
-              if (cumpleanosData.length === 0) {
-                  tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay cumpleaños registrados</td></tr>';
-                  return;
-              }
-              
-              const cumpleanosOrdenados = [...cumpleanosData].sort((a, b) => {
-                  const [mesA, diaA] = a.fecha.split('-').map(Number);
-                  const [mesB, diaB] = b.fecha.split('-').map(Number);
-                  
-                  // Primero ordenar por mes, luego por día
-                  if (mesA !== mesB) return mesA - mesB;
-                  return diaA - diaB;
-              });
-              
-              cumpleanosOrdenados.forEach((persona, index) => {
-                  const originalIndex = cumpleanosData.findIndex(p => 
-                      p.nombre === persona.nombre && p.fecha === persona.fecha
-                  );
-                  
-                  const [mes, dia] = persona.fecha.split('-');
-                  const fechaFormateada = `${parseInt(dia)} de ${MESES[parseInt(mes) - 1]} <small style="color: #666;">(${persona.fecha})</small>`;
-                  
-                  const row = document.createElement('tr');
-                  row.innerHTML = `
-                      <td>${persona.nombre}</td>
-                      <td>${fechaFormateada}</td>
-                      <td class="action-buttons">
-                          <button class="btn btn-warning" onclick="editCumpleanos(${originalIndex})">✏️ Editar</button>
-                          <button class="btn btn-danger" onclick="deleteCumpleanos(${originalIndex})">🗑️ Eliminar</button>
-                      </td>
-                  `;
-                  tbody.appendChild(row);
-              });
-          }
-          
-          function filterCumpleanos() {
-              const search = document.getElementById('searchCumple').value.toLowerCase();
-              const filterMes = document.getElementById('filterMes').value;
-              const rows = document.querySelectorAll('#cumpleanosTable tr');
-              
-              rows.forEach((row, index) => {
-                  // Saltar filas vacías o de encabezado
-                  if (!row.cells[0] || row.cells[0].tagName === 'TH') return;
-                  
-                  const nombre = row.cells[0]?.textContent.toLowerCase() || '';
-                  
-                  // ✅ USAR el dato original del array (NO el texto formateado)
-                  const persona = cumpleanosData[index];
-                  let matchMes = true;
-                  
-                  if (persona && persona.fecha && filterMes) {
-                      // Extraer mes del formato original "MM-DD"
-                      const mes = persona.fecha.trim().split('-')[0];
-                      matchMes = mes === filterMes;
-                  }
-                  
-                  // Filtrar por nombre
-                  const matchNombre = nombre.includes(search);
-                  
-                  // Mostrar si cumple ambos filtros
-                  row.style.display = (matchNombre && matchMes) ? '' : 'none';
-              });
-          }
-          
-          function editCumpleanos(index) {
-              currentEdit = { tipo: 'cumpleanos', index };
-              openModal('cumpleanos', cumpleanosData[index]);
-          }
-          
-          async function deleteCumpleanos(index) {
-              if (!confirm(`¿Eliminar a ${cumpleanosData[index].nombre}?`)) return;
-              
-              cumpleanosData.splice(index, 1);
-              renderCumpleanos();
-              await guardarEnGitHub();
-          }
-          
-          function loadHorarios() {
-              currentDia = document.getElementById('diaSelect').value;
-              const diaData = horariosData[currentDia] || horariosData["0"] || { cumpleanos: [], anuncios_video: [], pausas_activas: {} };
-              
-              const container = document.getElementById('horariosContent');
-              container.innerHTML = `
-                  <div class="horario-group">
-                      <h3>Cumpleaños (${diaData.cumpleanos?.length || 0})</h3>
-                      ${renderHorariosTable(diaData.cumpleanos || [], 'cumple')}
-                  </div>
-                  <div class="horario-group">
-                      <h3>Anuncios Video (${diaData.anuncios_video?.length || 0})</h3>
-                      ${renderHorariosTable(diaData.anuncios_video || [], 'anuncio')}
-                  </div>
-                  <div class="horario-group">
-                      <h3>Pausas Activas</h3>
-                      ${renderPausasTable(diaData.pausas_activas || {})}
-                  </div>
-              `;
-          }
-          
-          function renderHorariosTable(datos, tipo) {
-              if (!datos || datos.length === 0) return '<p style="color: #666; padding: 10px;">Sin horarios configurados</p>';
-              
-              return `
-                  <table>
-                      <thead>
-                          <tr>
-                              <th>Hora Inicio</th>
-                              <th>Duración</th>
-                              ${tipo !== 'cumple' ? '<th>Video ID</th>' : ''}
-                              <th>Acciones</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          ${datos.map((item, i) => `
-                              <tr>
-                                  <td>${item.hora_inicio}</td>
-                                  <td>${item.duracion_por_persona || item.duracion} seg</td>
-                                  ${tipo !== 'cumple' ? `<td>${item.archivo}</td>` : ''}
-                                  <td class="action-buttons">
-                                      <button class="btn btn-warning" onclick="editHorario('${tipo}', ${i})">✏️</button>
-                                      <button class="btn btn-danger" onclick="deleteHorario('${tipo}', ${i})">🗑️</button>
-                                  </td>
-                              </tr>
-                          `).join('')}
-                      </tbody>
-                  </table>
-              `;
-          }
-          
-          function renderPausasTable(pausas) {
-              if (!pausas || Object.keys(pausas).length === 0) return '<p style="color: #666; padding: 10px;">Sin pausas configuradas</p>';
-              
-              return Object.entries(pausas).map(([key, items]) => `
-                  <div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 5px;">
-                      <h4 style="color: #667eea; margin-bottom: 10px;">${key}</h4>
-                      <table>
-                          <thead>
-                              <tr><th>Hora</th><th>Video</th><th>Duración</th><th>Acciones</th></tr>
-                          </thead>
-                          <tbody>
-                              ${items.map((item, i) => `
-                                  <tr>
-                                      <td>${item.hora_inicio}</td>
-                                      <td>${item.archivo}</td>
-                                      <td>${item.duracion} seg</td>
-                                      <td class="action-buttons">
-                                          <button class="btn btn-warning" onclick="editPausa('${key}', ${i})">✏️</button>
-                                          <button class="btn btn-danger" onclick="deletePausa('${key}', ${i})">🗑️</button>
-                                      </td>
-                                  </tr>
-                              `).join('')}
-                          </tbody>
-                      </table>
-                      <button class="btn btn-success" style="margin-top: 10px;" onclick="addPausa('${key}')">+ Agregar a ${key}</button>
-                  </div>
-              `).join('');
-          }
-          
-          function editHorario(tipo, index) {
-              currentEdit = { tipo: 'horario', subtipo: tipo, index, dia: currentDia };
-              const diaData = horariosData[currentDia] || horariosData["0"];
-              let data = tipo === 'cumple' ? diaData.cumpleanos[index] : diaData.anuncios_video[index];
-              openModal(`horario${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`, data);
-          }
-          
-          async function deleteHorario(tipo, index) {
-              if (!confirm('¿Eliminar este horario?')) return;
-              
-              const diaData = horariosData[currentDia] || horariosData["0"];
-              if (tipo === 'cumple' && diaData.cumpleanos) diaData.cumpleanos.splice(index, 1);
-              else if (tipo === 'anuncio' && diaData.anuncios_video) diaData.anuncios_video.splice(index, 1);
-              
-              horariosData[currentDia] = diaData;
-              loadHorarios();
-              await guardarEnGitHub();
-          }
-          
-          function editPausa(key, index) {
-              currentEdit = { tipo: 'pausa', key, index, dia: currentDia };
-              const diaData = horariosData[currentDia] || horariosData["0"];
-              const data = diaData.pausas_activas[key][index];
-              currentPausaKey = key;
-              openModal('horarioPausa', data, key);
-          }
-          
-          async function deletePausa(key, index) {
-              if (!confirm('¿Eliminar esta pausa?')) return;
-              
-              const diaData = horariosData[currentDia] || horariosData["0"];
-              if (diaData.pausas_activas[key]) {
-                  diaData.pausas_activas[key].splice(index, 1);
-              }
-              
-              loadHorarios();
-              await guardarEnGitHub();
-          }
-          
-          function addPausa(key) {
-              currentEdit = { tipo: 'pausa', key, index: null, dia: currentDia };
-              currentPausaKey = key;
-              openModal('horarioPausa', null, key);
-          }
-          
-          function openModal(tipo, data = null, pausaKey = null) {
-              const modal = document.getElementById('modal');
-              const form = document.getElementById('modalForm');
-              const fields = document.getElementById('modalFields');
-              const title = document.getElementById('modalTitle');
-              
-              modal.style.display = 'block';
-              form.dataset.tipo = tipo;
-              form.dataset.pausaKey = pausaKey || '';
-              
-              if (tipo === 'cumpleanos') {
-                  title.textContent = data ? '✏️ Editar Cumpleaños' : '➕ Agregar Cumpleaños';
-                  
-                  // Extraer mes y día si existe data
-                  let mesValue = '';
-                  let diaValue = '';
-                  if (data?.fecha) {
-                      const [mes, dia] = data.fecha.split('-');
-                      mesValue = mes;
-                      diaValue = dia;
-                  }
-                  
-                  fields.innerHTML = `
-                  <br><br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Nombre Completo *</strong></label>
-                          <input type="text" name="nombre" value="${data?.nombre || ''}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Fecha de Cumpleaños *</strong></label>
-                          <div style="display: flex; gap: 10px; margin-top: 5px;">
-                              <div style="flex: 1;">
-                                  <select name="mes" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                                      <option value="">Mes</option>
-                                      <option value="01" ${mesValue === '01' ? 'selected' : ''}>Enero</option>
-                                      <option value="02" ${mesValue === '02' ? 'selected' : ''}>Febrero</option>
-                                      <option value="03" ${mesValue === '03' ? 'selected' : ''}>Marzo</option>
-                                      <option value="04" ${mesValue === '04' ? 'selected' : ''}>Abril</option>
-                                      <option value="05" ${mesValue === '05' ? 'selected' : ''}>Mayo</option>
-                                      <option value="06" ${mesValue === '06' ? 'selected' : ''}>Junio</option>
-                                      <option value="07" ${mesValue === '07' ? 'selected' : ''}>Julio</option>
-                                      <option value="08" ${mesValue === '08' ? 'selected' : ''}>Agosto</option>
-                                      <option value="09" ${mesValue === '09' ? 'selected' : ''}>Septiembre</option>
-                                      <option value="10" ${mesValue === '10' ? 'selected' : ''}>Octubre</option>
-                                      <option value="11" ${mesValue === '11' ? 'selected' : ''}>Noviembre</option>
-                                      <option value="12" ${mesValue === '12' ? 'selected' : ''}>Diciembre</option>
-                                  </select>
-                              </div>
-                              <div style="flex: 1;">
-                                  <select name="dia" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                                      <option value="">Día</option>
-                                      ${Array.from({length: 31}, (_, i) => {
-                                          const diaNum = String(i + 1).padStart(2, '0');
-                                          return `<option value="${diaNum}" ${diaValue === diaNum ? 'selected' : ''}>${i + 1}</option>`;
-                                      }).join('')}
-                                  </select>
-                              </div>
-                          </div>
-                      </div>
-                  `;
-              } else if (tipo === 'horarioCumple') {
-                  title.textContent = data ? '✏️ Editar' : '➕ Agregar Cumpleaños';
-                  fields.innerHTML = `
-                  <br><br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Hora Inicio *</strong></label>
-                          <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Duración por Persona (segundos) *</strong></label>
-                          <input type="number" name="duracion_por_persona" value="${data?.duracion_por_persona || 60}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                  `;
-              } else if (tipo === 'horarioAnuncio') {
-                  title.textContent = data ? '✏️ Editar' : '➕ Agregar Anuncio';
-                  fields.innerHTML = `
-                  <br><br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Hora Inicio *</strong></label>
-                          <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>ID Video YouTube *</strong></label>
-                          <input type="text" name="archivo" value="${data?.archivo || ''}" placeholder="dGjbt4grjLU" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                          <small style="color: #666;">Solo el ID del video YouTube 10 digitos</small>
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Duración (segundos) *</strong></label>
-                          <input type="number" name="duracion" value="${data?.duracion || 60}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                  `;
-              } else if (tipo === 'horarioPausa') {
-                  title.textContent = data ? '✏️ Editar' : '➕ Agregar Pausa Activa';
-                  const pausaOptions = pausaKey ? `<option value="${pausaKey}" selected>${pausaKey}</option>` : 
-                      '<option value="pausa_1">Pausa 1</option><option value="pausa_2">Pausa 2</option>';
-                  
-                  fields.innerHTML = `
-                  <br><br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Grupo de Pausa</strong></label>
-                          <select name="pausa_key" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                              ${pausaOptions}
-                              <option value="pausa_1">Pausa 1</option>
-                              <option value="pausa_2">Pausa 2</option>
-                          </select>
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Hora Inicio *</strong></label>
-                          <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>ID Video YouTube *</strong></label>
-                          <input type="text" name="archivo" value="${data?.archivo || ''}" placeholder="WfdH9x3C0lg" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                      <br>
-                      <div style="margin-bottom: 15px;">
-                          <label><strong>Duración (segundos) *</strong></label>
-                          <input type="number" name="duracion" value="${data?.duracion || 600}" required 
-                                 style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
-                      </div>
-                  `;
-              }
-          }
-          
-          function closeModal() {
-              document.getElementById('modal').style.display = 'none';
-              currentEdit = null;
-              currentPausaKey = null;
-          }
-          
-          async function saveData(e) {
-              e.preventDefault();
-              const form = e.target;
-              const formData = new FormData(form);
-              const data = Object.fromEntries(formData);
-              const tipo = form.dataset.tipo;
-              
-              if (tipo === 'cumpleanos') {
-                  // Combinar mes y día en formato MM-DD
-                  const mes = formData.get('mes');
-                  const dia = formData.get('dia');
-                  data.fecha = `${mes}-${dia}`;
-                  delete data.mes;
-                  delete data.dia;
-                  
-                  if (currentEdit?.index !== undefined) {
-                      cumpleanosData[currentEdit.index] = data;
-                  } else {
-                      cumpleanosData.push(data);
-                  }
-                  renderCumpleanos();
-              } else if (tipo.startsWith('horario')) {
-                  const diaData = horariosData[currentDia] || { cumpleanos: [], anuncios_video: [], pausas_activas: {} };
-                  
-                  data.hora_inicio = `${data.hora_inicio}:00`;
-                  
-                  if (tipo === 'horarioCumple') {
-                      data.duracion_por_persona = parseInt(data.duracion_por_persona);
-                      if (!diaData.cumpleanos) diaData.cumpleanos = [];
-                      if (currentEdit?.index !== undefined) {
-                          diaData.cumpleanos[currentEdit.index] = data;
-                      } else {
-                          diaData.cumpleanos.push(data);
-                      }
-                  } else if (tipo === 'horarioAnuncio') {
-                      data.duracion = parseInt(data.duracion);
-                      if (!diaData.anuncios_video) diaData.anuncios_video = [];
-                      if (currentEdit?.index !== undefined) {
-                          diaData.anuncios_video[currentEdit.index] = data;
-                      } else {
-                          diaData.anuncios_video.push(data);
-                      }
-                  } else if (tipo === 'horarioPausa') {
-                      data.duracion = parseInt(data.duracion);
-                      const key = data.pausa_key || form.dataset.pausaKey;
-                      if (!diaData.pausas_activas) diaData.pausas_activas = {};
-                      if (!diaData.pausas_activas[key]) diaData.pausas_activas[key] = [];
-                      delete data.pausa_key;
-                      
-                      if (currentEdit?.index !== undefined) {
-                          diaData.pausas_activas[key][currentEdit.index] = data;
-                      } else {
-                          diaData.pausas_activas[key].push(data);
-                      }
-                  }
-                  
-                  horariosData[currentDia] = diaData;
-                  loadHorarios();
-              }
-              
-              closeModal();
-              await guardarEnGitHub();
-          }
-          
-          // ============================================
-          // UTILIDADES
-          // ============================================
-          function showTab(tabName) {
-              document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-              document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-              document.getElementById(tabName).classList.add('active');
-              event.target.classList.add('active');
-              if (tabName === 'horarios') loadHorarios();
-          }
-          
-          function mostrarNotificacion(mensaje, tipo = 'success') {
-              const notif = document.getElementById('notification');
-              notif.textContent = mensaje;
-              notif.className = `notification ${tipo}`;
-              notif.style.display = 'block';
-              setTimeout(() => { notif.style.display = 'none'; }, 3000);
-          }
-          
-          window.onclick = (event) => {
-              if (event.target === document.getElementById('modal')) closeModal();
-          };
-          
-          // ============================================
-          // INICIALIZAR
-          // ============================================
-          window.addEventListener('load', () => {
-              cargarDatos();
-              
-              // Recargar datos cada 30 segundos
-              setInterval(() => {
-                  if (!isSaving) {
-                      cargarDatos();
-                  }
-              }, 30000);
-          });
-      </script>
-  </body>
-  </html>
+        // ============================================
+        // CONFIGURACIÓN GITHUB (Direct API)
+        // ============================================
+        function toggleConfig() {
+            const content = document.getElementById('configContent');
+            const toggle = document.getElementById('configToggle');
+            content.classList.toggle('show');
+            toggle.classList.toggle('rotated');
+        }
+
+        function guardarConfig() {
+            const username = document.getElementById('githubUsername').value.trim();
+            const repo = document.getElementById('githubRepo').value.trim();
+            const token = document.getElementById('githubToken').value.trim();
+
+            if (!username || !repo || !token) {
+                mostrarNotificacion('❌ Completa todos los campos', 'error');
+                return;
+            }
+
+            localStorage.setItem('githubUsername', username);
+            localStorage.setItem('githubRepo', repo);
+            localStorage.setItem('githubToken', token);
+
+            mostrarNotificacion('Configuración guardada');
+            // Cerrar el panel después de guardar
+            document.getElementById('configContent').classList.remove('show');
+            document.getElementById('configToggle').classList.remove('rotated');
+            testConnection();
+        }
+
+        function getConfig() {
+            return {
+                username: localStorage.getItem('githubUsername') || '',
+                repo: localStorage.getItem('githubRepo') || '',
+                token: localStorage.getItem('githubToken') || ''
+            };
+        }
+
+        async function testConnection() {
+            const config = getConfig();
+            if (!config.token) {
+                mostrarNotificacion('Configura el token primero', 'error');
+                return;
+            }
+
+            setStatus('saving', 'Conectando...');
+
+            try {
+                await verifyRepository();
+                const cumple = await getFileContent('data/cumpleanos.json');
+                const horarios = await getFileContent('data/horarios.json');
+
+                console.log('Archivos encontrados:');
+                console.log('- cumpleanos.json:', cumple ? 'Existe' : 'No existe (se creará)');
+                console.log('- horarios.json:', horarios ? 'Existe' : 'No existe (se creará)');
+
+                document.getElementById('connectionStatus').innerHTML = 'Conectado';
+                document.getElementById('connectionStatus').style.color = 'green';
+                setStatus('connected', 'Conectado');
+                mostrarNotificacion('Conexión exitosa');
+                cargarDatos();
+
+            } catch (error) {
+                document.getElementById('connectionStatus').innerHTML = 'Error';
+                document.getElementById('connectionStatus').style.color = 'red';
+                setStatus('error', 'Error de conexión');
+                mostrarNotificacion(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getFileContent(path) {
+            const config = getConfig();
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${path}`, {
+                    headers: {
+                        'Authorization': `Bearer ${config.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'If-None-Match': ''
+                    }
+                });
+
+                if (response.status === 404) {
+                    console.log(`📄 Archivo no existe: ${path}, se creará nuevo`);
+                    return null;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                const content = JSON.parse(atob(data.content));
+                return { content, sha: data.sha };
+
+            } catch (error) {
+                console.error(`Error leyendo ${path}:`, error);
+                throw error;
+            }
+        }
+
+        async function updateFile(path, content, sha, message, maxRetries = 3) {
+            const config = getConfig();
+
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const requestBody = {
+                        message: message || `Update ${path}`,
+                        content: btoa(JSON.stringify(content, null, 2)),
+                        sha: sha || ''
+                    };
+
+                    if (!sha) {
+                        console.log(`📝 Creando archivo nuevo: ${path}`);
+                    }
+
+                    const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${path}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${config.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (response.status === 409 && attempt < maxRetries) {
+                        console.log(`Conflicto (intento ${attempt}/${maxRetries}). Reintentando...`);
+                        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                        const current = await getFileContent(path);
+                        if (current) {
+                            sha = current.sha;
+                            continue;
+                        }
+                    }
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error ${response.status}: ${errorText}`);
+                    }
+
+                    const result = await response.json();
+                    console.log(`Archivo actualizado: ${path}`);
+                    return result;
+
+                } catch (error) {
+                    if (attempt === maxRetries) {
+                        console.error(`Error después de ${maxRetries} intentos:`, error);
+                        throw error;
+                    }
+                }
+            }
+        }
+
+        // ============================================
+        // CARGAR DATOS
+        // ============================================
+        async function cargarDatos() {
+            setStatus('saving', 'Cargando datos...');
+
+            try {
+                const [cumpleResult, horarioResult] = await Promise.all([
+                    getFileContent('data/cumpleanos.json'),
+                    getFileContent('data/horarios.json')
+                ]);
+
+                cumpleanosData = cumpleResult.content;
+                horariosData = horarioResult.content;
+
+                updateLastSync();
+                setStatus('connected', 'Conectado');
+                renderCumpleanos();
+                loadHorarios();
+
+                mostrarNotificacion('Datos cargados correctamente');
+
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('error', 'Error de conexión');
+                mostrarNotificacion('Error al cargar datos', 'error');
+            }
+        }
+
+        async function guardarEnGitHub() {
+            if (isSaving) {
+                mostrarNotificacion('Operación en curso', 'warning');
+                return;
+            }
+
+            isSaving = true;
+            setStatus('saving', 'Guardando...');
+            document.getElementById('saveBtn').disabled = true;
+
+            try {
+                const [cumpleData, horarioData] = await Promise.all([
+                    getFileContent('data/cumpleanos.json'),
+                    getFileContent('data/horarios.json')
+                ]);
+
+                await Promise.all([
+                    updateFile(
+                        'data/cumpleanos.json',
+                        cumpleanosData,
+                        cumpleData?.sha || null,
+                        `Update cumpleaños - ${new Date().toLocaleString('es-CO')}`
+                    ),
+                    updateFile(
+                        'data/horarios.json',
+                        horariosData,
+                        horarioData?.sha || null,
+                        `Update horarios - ${new Date().toLocaleString('es-CO')}`
+                    )
+                ]);
+
+                updateLastSync();
+                setStatus('connected', 'Conectado');
+                mostrarNotificacion('Cambios guardados correctamente');
+                await cargarDatos();
+
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('error', 'Error al guardar');
+
+                if (error.message.includes('404')) {
+                    mostrarNotificacion('Error 404: Verifica que el repositorio exista y el token tenga permisos', 'error');
+                } else if (error.message.includes('409')) {
+                    mostrarNotificacion('Conflicto: El archivo fue modificado. Recarga e intenta de nuevo', 'error');
+                } else {
+                    mostrarNotificacion(`Error: ${error.message}`, 'error');
+                }
+
+            } finally {
+                isSaving = false;
+                document.getElementById('saveBtn').disabled = false;
+            }
+        }
+
+        async function verifyRepository() {
+            const config = getConfig();
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}`, {
+                    headers: {
+                        'Authorization': `Bearer ${config.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Repositorio no encontrado o token inválido');
+                }
+
+                const repo = await response.json();
+                console.log('Repositorio:', repo.full_name);
+                console.log('Permisos:', repo.permissions);
+                return repo;
+
+            } catch (error) {
+                console.error('Error verificando repositorio:', error);
+                throw error;
+            }
+        }
+
+        // ============================================
+        // UTILIDADES DE ESTADO
+        // ============================================
+        function setStatus(type, text) {
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            statusBar.className = `status-bar ${type}`;
+            statusText.textContent = text;
+            loadingIndicator.style.display = type === 'saving' ? 'inline-block' : 'none';
+        }
+
+        function updateLastSync() {
+            const now = new Date();
+            document.getElementById('lastSync').textContent = now.toLocaleString('es-CO');
+        }
+
+        // ============================================
+        // CUMPLEAÑOS - CRUD
+        // ============================================
+        function renderCumpleanos() {
+            const tbody = document.getElementById('cumpleanosTable');
+            tbody.innerHTML = '';
+
+            if (cumpleanosData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay cumpleaños registrados</td></tr>';
+                return;
+            }
+
+            cumpleanosData.forEach((persona, index) => {
+                const [mes, dia] = persona.fecha.split('-');
+                const fechaFormateada = `${parseInt(dia)} de ${MESES[parseInt(mes) - 1]} <small style="color: #666;">(${persona.fecha})</small>`;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${persona.nombre}</td>
+                    <td>${fechaFormateada}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-warning" onclick="editCumpleanos(${index})">✏️ Editar</button>
+                        <button class="btn btn-danger" onclick="deleteCumpleanos(${index})">🗑️ Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterCumpleanos() {
+            const search = document.getElementById('searchCumple').value.toLowerCase();
+            const filterMes = document.getElementById('filterMes').value;
+            const rows = document.querySelectorAll('#cumpleanosTable tr');
+
+            rows.forEach((row, index) => {
+                if (row.querySelector('th')) return;
+
+                const nombre = row.cells[0]?.textContent.toLowerCase() || '';
+                const persona = cumpleanosData[index];
+                let matchMes = true;
+
+                if (persona && persona.fecha && filterMes) {
+                    const mes = persona.fecha.split('-')[0];
+                    matchMes = mes === filterMes;
+                }
+
+                const matchNombre = nombre.includes(search);
+                row.style.display = (matchNombre && matchMes) ? '' : 'none';
+            });
+        }
+
+        function editCumpleanos(index) {
+            currentEdit = { tipo: 'cumpleanos', index };
+            openModal('cumpleanos', cumpleanosData[index]);
+        }
+
+        async function deleteCumpleanos(index) {
+            if (!confirm(`¿Eliminar a ${cumpleanosData[index].nombre}?`)) return;
+
+            cumpleanosData.splice(index, 1);
+            renderCumpleanos();
+            await guardarEnGitHub();
+        }
+
+        // ============================================
+        // HORARIOS - CRUD
+        // ============================================
+        function loadHorarios() {
+            currentDia = document.getElementById('diaSelect').value;
+            const diaData = horariosData[currentDia] || horariosData["0"] || { cumpleanos: [], anuncios_video: [], pausas_activas: {} };
+
+            const container = document.getElementById('horariosContent');
+            container.innerHTML = `
+                <div class="horario-group">
+                    <h3>Cumpleaños (${diaData.cumpleanos?.length || 0})</h3>
+                    ${renderHorariosTable(diaData.cumpleanos || [], 'cumple')}
+                </div>
+                <div class="horario-group">
+                    <h3>Anuncios Video (${diaData.anuncios_video?.length || 0})</h3>
+                    ${renderHorariosTable(diaData.anuncios_video || [], 'anuncio')}
+                </div>
+                <div class="horario-group">
+                    <h3>Pausas Activas</h3>
+                    ${renderPausasTable(diaData.pausas_activas || {})}
+                </div>
+            `;
+        }
+
+        function renderHorariosTable(datos, tipo) {
+            if (!datos || datos.length === 0) return '<p style="color: #666; padding: 10px;">Sin horarios configurados</p>';
+
+            return `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora Inicio</th>
+                            <th>Duración</th>
+                            ${tipo !== 'cumple' ? '<th>Video ID</th>' : ''}
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${datos.map((item, i) => `
+                            <tr>
+                                <td>${item.hora_inicio}</td>
+                                <td>${item.duracion_por_persona || item.duracion} seg</td>
+                                ${tipo !== 'cumple' ? `<td>${item.archivo}</td>` : ''}
+                                <td class="action-buttons">
+                                    <button class="btn btn-warning" onclick="editHorario('${tipo}', ${i})">✏️</button>
+                                    <button class="btn btn-danger" onclick="deleteHorario('${tipo}', ${i})">🗑️</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderPausasTable(pausas) {
+            if (!pausas || Object.keys(pausas).length === 0) return '<p style="color: #666; padding: 10px;">Sin pausas configuradas</p>';
+
+            return Object.entries(pausas).map(([key, items]) => `
+                <div style="margin-bottom: 15px; padding: 10px; background: white; border-radius: 5px;">
+                    <h4 style="color: #667eea; margin-bottom: 10px;">${key}</h4>
+                    <table>
+                        <thead>
+                            <tr><th>Hora</th><th>Video</th><th>Duración</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            ${items.map((item, i) => `
+                                <tr>
+                                    <td>${item.hora_inicio}</td>
+                                    <td>${item.archivo}</td>
+                                    <td>${item.duracion} seg</td>
+                                    <td class="action-buttons">
+                                        <button class="btn btn-warning" onclick="editPausa('${key}', ${i})">✏️</button>
+                                        <button class="btn btn-danger" onclick="deletePausa('${key}', ${i})">🗑️</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <button class="btn btn-success" style="margin-top: 10px;" onclick="addPausa('${key}')">+ Agregar a ${key}</button>
+                </div>
+            `).join('');
+        }
+
+        function editHorario(tipo, index) {
+            currentEdit = { tipo: 'horario', subtipo: tipo, index, dia: currentDia };
+            const diaData = horariosData[currentDia] || horariosData["0"];
+            let data = tipo === 'cumple' ? diaData.cumpleanos[index] : diaData.anuncios_video[index];
+            openModal(`horario${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`, data);
+        }
+
+        async function deleteHorario(tipo, index) {
+            if (!confirm('¿Eliminar este horario?')) return;
+
+            const diaData = horariosData[currentDia] || horariosData["0"];
+            if (tipo === 'cumple' && diaData.cumpleanos) diaData.cumpleanos.splice(index, 1);
+            else if (tipo === 'anuncio' && diaData.anuncios_video) diaData.anuncios_video.splice(index, 1);
+
+            horariosData[currentDia] = diaData;
+            loadHorarios();
+            await guardarEnGitHub();
+        }
+
+        function editPausa(key, index) {
+            currentEdit = { tipo: 'pausa', key, index, dia: currentDia };
+            const diaData = horariosData[currentDia] || horariosData["0"];
+            const data = diaData.pausas_activas[key][index];
+            currentPausaKey = key;
+            openModal('horarioPausa', data, key);
+        }
+
+        async function deletePausa(key, index) {
+            if (!confirm('¿Eliminar esta pausa?')) return;
+
+            const diaData = horariosData[currentDia] || horariosData["0"];
+            if (diaData.pausas_activas[key]) {
+                diaData.pausas_activas[key].splice(index, 1);
+            }
+
+            loadHorarios();
+            await guardarEnGitHub();
+        }
+
+        function addPausa(key) {
+            currentEdit = { tipo: 'pausa', key, index: null, dia: currentDia };
+            currentPausaKey = key;
+            openModal('horarioPausa', null, key);
+        }
+
+        // ============================================
+        // MODAL Y FORMULARIOS
+        // ============================================
+        function openModal(tipo, data = null, pausaKey = null) {
+            const modal = document.getElementById('modal');
+            const form = document.getElementById('modalForm');
+            const fields = document.getElementById('modalFields');
+            const title = document.getElementById('modalTitle');
+
+            modal.style.display = 'block';
+            form.dataset.tipo = tipo;
+            form.dataset.pausaKey = pausaKey || '';
+
+            if (tipo === 'cumpleanos') {
+                title.textContent = data ? '✏️ Editar Cumpleaños' : '➕ Agregar Cumpleaños';
+
+                let mesValue = '';
+                let diaValue = '';
+                if (data?.fecha) {
+                    const [mes, dia] = data.fecha.split('-');
+                    mesValue = mes;
+                    diaValue = dia;
+                }
+
+                fields.innerHTML = `
+                    <br><br><div style="margin-bottom: 15px;">
+                        <label><strong>Nombre Completo *</strong></label>
+                        <input type="text" name="nombre" value="${data?.nombre || ''}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div><br><br>  
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Fecha de Cumpleaños *</strong></label>
+                        <div style="display: flex; gap: 10px; margin-top: 5px;">
+                            <div style="flex: 1;">
+                                <select name="mes" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="">Mes</option>
+                                    ${MESES.map((m, i) => {
+                                        const mesNum = String(i + 1).padStart(2, '0');
+                                        return `<option value="${mesNum}" ${mesValue === mesNum ? 'selected' : ''}>${m}</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <select name="dia" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <option value="">Día</option>
+                                    ${Array.from({length: 31}, (_, i) => {
+                                        const diaNum = String(i + 1).padStart(2, '0');
+                                        return `<option value="${diaNum}" ${diaValue === diaNum ? 'selected' : ''}>${i + 1}</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+            } else if (tipo === 'horarioCumple') {
+                title.textContent = data ? '✏️ Editar' : '➕ Agregar Cumpleaños';
+
+                fields.innerHTML = `
+                    <br><br><div style="margin-bottom: 15px;">
+                        <label><strong>Hora Inicio *</strong></label>
+                        <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div><br><br>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Duración por Persona (segundos) *</strong></label>
+                        <input type="number" name="duracion_por_persona" value="${data?.duracion_por_persona || 60}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                `;
+
+            } else if (tipo === 'horarioAnuncio') {
+                title.textContent = data ? '✏️ Editar' : '➕ Agregar Anuncio';
+
+                fields.innerHTML = `
+                    <br><br><div style="margin-bottom: 15px;">
+                        <label><strong>Hora Inicio *</strong></label>
+                        <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div><br><br>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>ID Video YouTube *</strong></label>
+                        <input type="text" name="archivo" value="${data?.archivo?.trim() || ''}" placeholder="dGjbt4grjLU" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                        <small style="color: #666;">Solo el ID del video (ej: dGjbt4grjLU)</small>
+                    </div><br><br>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Duración (segundos) *</strong></label>
+                        <input type="number" name="duracion" value="${data?.duracion || 60}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                `;
+
+            } else if (tipo === 'horarioPausa') {
+                title.textContent = data ? '✏️ Editar' : '➕ Agregar Pausa Activa';
+
+                const pausaOptions = pausaKey ? `<option value="${pausaKey}" selected>${pausaKey}</option>` :
+                    '<option value="pausa_1">Pausa 1</option><option value="pausa_2">Pausa 2</option>';
+
+                fields.innerHTML = `
+                    <br><br><div style="margin-bottom: 15px;">
+                        <label><strong>Grupo de Pausa</strong></label>
+                        <select name="pausa_key" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                            ${pausaOptions}
+                            <option value="pausa_1">Pausa 1</option>
+                            <option value="pausa_2">Pausa 2</option>
+                        </select>
+                    </div><br><br>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Hora Inicio *</strong></label>
+                        <input type="time" name="hora_inicio" value="${data?.hora_inicio?.substring(0,5) || ''}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div><br><br>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>ID Video YouTube *</strong></label>
+                        <input type="text" name="archivo" value="${data?.archivo?.trim() || ''}" placeholder="WfdH9x3C0lg" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div><br><br>
+                    <div style="margin-bottom: 15px;">
+                        <label><strong>Duración (segundos) *</strong></label>
+                        <input type="number" name="duracion" value="${data?.duracion || 600}" required
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;">
+                    </div>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            currentEdit = null;
+            currentPausaKey = null;
+        }
+
+        async function saveData(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            const tipo = form.dataset.tipo;
+
+            if (tipo === 'cumpleanos') {
+                const mes = formData.get('mes');
+                const dia = formData.get('dia');
+                data.fecha = `${mes}-${dia}`;
+                delete data.mes;
+                delete data.dia;
+
+                if (currentEdit?.index !== undefined) {
+                    cumpleanosData[currentEdit.index] = data;
+                } else {
+                    cumpleanosData.push(data);
+                }
+
+                renderCumpleanos();
+
+            } else if (tipo.startsWith('horario')) {
+                const diaData = horariosData[currentDia] || { cumpleanos: [], anuncios_video: [], pausas_activas: {} };
+
+                data.hora_inicio = `${data.hora_inicio}:00`;
+
+                if (tipo === 'horarioCumple') {
+                    data.duracion_por_persona = parseInt(data.duracion_por_persona);
+                    if (!diaData.cumpleanos) diaData.cumpleanos = [];
+                    if (currentEdit?.index !== undefined) {
+                        diaData.cumpleanos[currentEdit.index] = data;
+                    } else {
+                        diaData.cumpleanos.push(data);
+                    }
+
+                } else if (tipo === 'horarioAnuncio') {
+                    data.duracion = parseInt(data.duracion);
+                    if (!diaData.anuncios_video) diaData.anuncios_video = [];
+                    if (currentEdit?.index !== undefined) {
+                        diaData.anuncios_video[currentEdit.index] = data;
+                    } else {
+                        diaData.anuncios_video.push(data);
+                    }
+
+                } else if (tipo === 'horarioPausa') {
+                    data.duracion = parseInt(data.duracion);
+                    const key = data.pausa_key || form.dataset.pausaKey;
+                    if (!diaData.pausas_activas) diaData.pausas_activas = {};
+                    if (!diaData.pausas_activas[key]) diaData.pausas_activas[key] = [];
+                    delete data.pausa_key;
+
+                    if (currentEdit?.index !== undefined) {
+                        diaData.pausas_activas[key][currentEdit.index] = data;
+                    } else {
+                        diaData.pausas_activas[key].push(data);
+                    }
+                }
+
+                horariosData[currentDia] = diaData;
+                loadHorarios();
+            }
+
+            closeModal();
+            await guardarEnGitHub();
+        }
+
+        // ============================================
+        // UTILIDADES
+        // ============================================
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'horarios') loadHorarios();
+        }
+
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notif = document.getElementById('notification');
+            notif.textContent = mensaje;
+            notif.className = `notification ${tipo}`;
+            notif.style.display = 'block';
+            setTimeout(() => { notif.style.display = 'none'; }, 3000);
+        }
+
+        window.onclick = (event) => {
+            if (event.target === document.getElementById('modal')) closeModal();
+        };
+
+        // ============================================
+        // INICIALIZAR
+        // ============================================
+        window.addEventListener('load', () => {
+            const config = getConfig();
+
+            if (config.username) document.getElementById('githubUsername').value = config.username;
+            if (config.repo) document.getElementById('githubRepo').value = config.repo;
+            if (config.token) document.getElementById('githubToken').value = config.token;
+
+            // Si hay configuración guardada, mantener el panel cerrado
+            if (config.token) {
+                testConnection();
+            } else {
+                // Si no hay config, mostrar el panel
+                document.getElementById('configContent').classList.add('show');
+                document.getElementById('configToggle').classList.add('rotated');
+            }
+        });
+    </script>
+</body>
+</html>
