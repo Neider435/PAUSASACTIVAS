@@ -287,8 +287,8 @@ async function checkEstado() {
     const timestamp = Date.now();
     
     const [cumpleResponse, horarioResponse] = await Promise.all([
-      fetch(`/data/cumpleanos.json?t=${timestamp}`),
-      fetch(`/data/horarios.json?t=${timestamp}`)
+      fetch(`data/cumpleanos.json?t=${timestamp}`),
+      fetch(`data/horarios.json?t=${timestamp}`)
     ]);
 
     if (!cumpleResponse.ok || !horarioResponse.ok) {
@@ -461,3 +461,4 @@ function handleStartSound() {
 }
 
 window.addEventListener('load', initializeApplication);
+
