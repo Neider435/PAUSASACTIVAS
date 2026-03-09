@@ -101,7 +101,7 @@ function showBirthdayMessage(nombre, duracion) {
     const dynamicContent = document.getElementById("dynamic-content");
     const birthdayText = document.getElementById("birthday-text");
     
-    dynamicContent.innerHTML = `<img src="/static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
+    dynamicContent.innerHTML = `<img src="static/avisos/cumpleanos.png" alt="Feliz Cumpleaños" class="birthday-background-image">`;
     dynamicContent.style.display = 'block';
     
     birthdayText.innerHTML = `${nombre}`;
@@ -461,4 +461,5 @@ function handleStartSound() {
 }
 
 window.addEventListener('load', initializeApplication);
+
 
